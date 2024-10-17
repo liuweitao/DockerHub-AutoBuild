@@ -39,11 +39,15 @@ jobs:
           echo "Available Docker tags:"
           echo "$AVAILABLE_TAGS"
           
-          # 查找匹配的标签
+          # 查找匹配的标签，首先尝试完全匹配，然后是主要版本匹配
           MATCHING_TAG=$(echo "$AVAILABLE_TAGS" | grep -E "^${LATEST_VERSION}(-apache)?$" | head -n 1)
+          if [ -z "$MATCHING_TAG" ]; then
+            MAJOR_VERSION=$(echo $LATEST_VERSION | cut -d. -f1)
+            MATCHING_TAG=$(echo "$AVAILABLE_TAGS" | grep -E "^${MAJOR_VERSION}(-apache)?$" | head -n 1)
+          fi
           
           if [ -z "$MATCHING_TAG" ]; then
-            echo "No matching tag found for version $LATEST_VERSION"
+            echo "No suitable tag found for version $LATEST_VERSION"
             exit 1
           fi
           
