@@ -72,7 +72,8 @@ jobs:
         if: env.BUILD_NEEDED == 'true'
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./nextcloud  # 更新构建上下文到 nextcloud 目录
+          file: ./nextcloud/Dockerfile  # 指定 Dockerfile 的路径
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/nextcloud:${{ env.NEXTCLOUD_VERSION }}
