@@ -21,18 +21,35 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Check for new Nextcloud version
+      - name: Check for new Nextcloud version and available Docker tags
         id: check-version
         run: |
           LATEST_VERSION=$(curl -s https://api.github.com/repos/nextcloud/server/releases/latest | jq -r .tag_name | sed 's/^v//')
           echo "Latest Nextcloud version: $LATEST_VERSION"
-          echo "NEXTCLOUD_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+          
+          # 获取可用的 Docker 标签
+          AVAILABLE_TAGS=$(curl -s https://registry.hub.docker.com/v2/repositories/library/nextcloud/tags?page_size=100 | jq -r '.results[].name')
+          echo "Available Docker tags:"
+          echo "$AVAILABLE_TAGS"
+          
+          # 查找匹配的标签
+          MATCHING_TAG=$(echo "$AVAILABLE_TAGS" | grep -E "^${LATEST_VERSION}(-apache)?$" | head -n 1)
+          
+          if [ -z "$MATCHING_TAG" ]; then
+            echo "No matching tag found for version $LATEST_VERSION"
+            exit 1
+          fi
+          
+          echo "NEXTCLOUD_VERSION=$MATCHING_TAG" >> $GITHUB_ENV
+          echo "Found matching tag: $MATCHING_TAG"
+          
           if [ -f .nextcloud-version ]; then
             CURRENT_VERSION=$(cat .nextcloud-version)
           else
-            CURRENT_VERSION="30.0.0"  # 设置初始版本为 30.0.0
+            CURRENT_VERSION=""
           fi
-          if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
+          
+          if [ "$MATCHING_TAG" != "$CURRENT_VERSION" ]; then
             echo "New version detected"
             echo "BUILD_NEEDED=true" >> $GITHUB_ENV
           else
