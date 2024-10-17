@@ -1,0 +1,66 @@
+name: Build Nextcloud Docker Image
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天运行一次
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Check for new Nextcloud version
+        id: check-version
+        run: |
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/nextcloud/server/releases/latest | jq -r .tag_name)
+          echo "Latest Nextcloud version: $LATEST_VERSION"
+          echo "NEXTCLOUD_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+          if [ -f .nextcloud-version ]; then
+            CURRENT_VERSION=$(cat .nextcloud-version)
+          else
+            CURRENT_VERSION="30.0.0"  # 设置初始版本为 30.0.0
+          fi
+          if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
+            echo "New version detected"
+            echo "BUILD_NEEDED=true" >> $GITHUB_ENV
+          else
+            echo "No new version"
+            echo "BUILD_NEEDED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Build and push Docker image
+        if: env.BUILD_NEEDED == 'true'
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/nextcloud:${{ env.NEXTCLOUD_VERSION }}
+            ${{ secrets.DOCKER_USERNAME }}/nextcloud:latest
+          build-args: |
+            NEXTCLOUD_VERSION=${{ env.NEXTCLOUD_VERSION }}
+
+      - name: Update version file
+        if: env.BUILD_NEEDED == 'true'
+        run: echo ${{ env.NEXTCLOUD_VERSION }} > .nextcloud-version
+
+      - name: Commit and push if version changed
+        if: env.BUILD_NEEDED == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .nextcloud-version
+          git commit -m "Update Nextcloud version to ${{ env.NEXTCLOUD_VERSION }}"
+          git push
