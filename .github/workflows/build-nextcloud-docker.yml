@@ -8,9 +8,13 @@ on:
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 添加写入权限
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取所有历史记录，以便进行推送
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -39,12 +43,8 @@ jobs:
           echo "Available Docker tags:"
           echo "$AVAILABLE_TAGS"
           
-          # 查找匹配的标签，首先尝试完全匹配，然后是主要版本匹配
-          MATCHING_TAG=$(echo "$AVAILABLE_TAGS" | grep -E "^${LATEST_VERSION}(-apache)?$" | head -n 1)
-          if [ -z "$MATCHING_TAG" ]; then
-            MAJOR_VERSION=$(echo $LATEST_VERSION | cut -d. -f1)
-            MATCHING_TAG=$(echo "$AVAILABLE_TAGS" | grep -E "^${MAJOR_VERSION}(-apache)?$" | head -n 1)
-          fi
+          # 查找匹配的标签，只使用纯数字版本
+          MATCHING_TAG=$(echo "$AVAILABLE_TAGS" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | sort -V | tail -n 1)
           
           if [ -z "$MATCHING_TAG" ]; then
             echo "No suitable tag found for version $LATEST_VERSION"
@@ -87,8 +87,8 @@ jobs:
       - name: Commit and push if version changed
         if: env.BUILD_NEEDED == 'true'
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add .nextcloud-version
           git commit -m "Update Nextcloud version to ${{ env.NEXTCLOUD_VERSION }}"
           git push
