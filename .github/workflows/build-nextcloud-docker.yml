@@ -24,7 +24,7 @@ jobs:
       - name: Check for new Nextcloud version
         id: check-version
         run: |
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/nextcloud/server/releases/latest | jq -r .tag_name)
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/nextcloud/server/releases/latest | jq -r .tag_name | sed 's/^v//')
           echo "Latest Nextcloud version: $LATEST_VERSION"
           echo "NEXTCLOUD_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
           if [ -f .nextcloud-version ]; then
