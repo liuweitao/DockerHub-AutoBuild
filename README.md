@@ -18,44 +18,22 @@
 - 自动将新镜像推送到 Docker Hub
 - 为每个软件进行版本跟踪
 
-## 工作流程
+## 项目结构
 
-### Nextcloud
-
-- 文件：`.github/workflows/build-nextcloud-docker.yml`
-- 构建最新版本的 Nextcloud
-- 包含额外的 PHP 扩展和 ffmpeg
-
-### CoreDNS
-
-- 文件：`.github/workflows/build-coredns-docker.yml`
-- 构建最新版本的 CoreDNS
-
-### FRP
-
-- 文件：`.github/workflows/build-frp-docker.yml`
-- 同时构建 FRP 服务器（frps）和客户端（frpc）
-- 使用单一的 Dockerfile，通过构建参数区分服务器和客户端版本
-
-### Endlessh
-
-- 文件：`.github/workflows/build-endlessh-docker.yml`
-- 构建 Endlessh SSH 蜜罐
-
-### Realm
-
-- 文件：`.github/workflows/build-realm-docker.yml`
-- 构建最新版本的 Realm
-- 支持 amd64 和 arm64 架构
-
-### Caddy-CF
-
-- 文件：`.github/workflows/build-caddy-cf-docker.yml`
-- 构建带有 Cloudflare DNS 插件的 Caddy
-- 基于 Docker Hub 上最新的 Caddy 版本
-- 用于解决没有 80 和 443 端口的机器获取 HTTPS 证书的问题
+每个项目都包含以下文件：
+- `Dockerfile`: 用于构建 Docker 镜像
+- `compose.yaml`: Docker Compose 配置文件
+- `README.md`: 项目说明文件
+- 配置文件示例（如适用）
 
 ## 使用方法
+
+1. 克隆此仓库
+2. 进入所需项目的目录
+3. 按照项目 README.md 中的说明进行配置
+4. 使用 `docker compose up -d` 启动服务
+
+## 镜像列表
 
 要使用这些镜像，您可以从 Docker Hub 拉取：
 
@@ -67,7 +45,6 @@ docker pull liuweitao/frpc:latest
 docker pull liuweitao/endlessh:latest
 docker pull liuweitao/realm:latest
 docker pull liuweitao/caddy-cf:latest
-```
 
 ## 安全性
 

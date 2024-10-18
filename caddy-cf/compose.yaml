@@ -1,0 +1,11 @@
+services:
+  caddy:
+    image: liuweitao/caddy-cf:latest
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./data:/data
+      - ./config:/config
+    environment:
+      - CLOUDFLARE_API_TOKEN=your_cloudflare_api_token
+    restart: unless-stopped

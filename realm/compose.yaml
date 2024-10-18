@@ -1,0 +1,7 @@
+services:
+  realm:
+    image: liuweitao/realm:latest
+    network_mode: host
+    volumes:
+      - ./config.toml:/etc/realm/config.toml:ro
+    restart: always

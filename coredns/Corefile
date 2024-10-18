@@ -1,0 +1,40 @@
+.:53 {
+    # 启用日志记录
+    log
+
+    # 启用错误日志
+    errors
+
+    # 启用健康检查
+    health {
+        lameduck 5s
+    }
+
+    # 启用指标收集
+    prometheus :9153
+
+    # 启用缓存
+    cache 30
+
+    # 转发查询到上游 DNS 服务器
+    forward . 8.8.8.8 8.8.4.4 {
+        prefer_udp
+        health_check 5s
+    }
+
+    # 启用 DNS 阻塞列表（可选）
+    # hosts /etc/coredns/blocked.hosts {
+    #     fallthrough
+    # }
+
+    # 本地域名解析示例
+    hosts {
+        192.168.1.10 home.example.com
+        fallthrough
+    }
+}
+
+# 示例：为特定域名使用不同的上游 DNS
+example.com {
+    forward . 9.9.9.9
+}

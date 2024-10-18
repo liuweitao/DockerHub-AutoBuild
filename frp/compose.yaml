@@ -1,0 +1,16 @@
+services:
+  frps:
+    image: liuweitao/frps:latest
+    ports:
+      - "7000:7000"
+      - "7500:7500"
+    volumes:
+      - ./frps.toml:/etc/frp/frps.toml:ro
+    restart: always
+
+  frpc:
+    image: liuweitao/frpc:latest
+    network_mode: host
+    volumes:
+      - ./frpc.toml:/etc/frp/frpc.toml:ro
+    restart: always

@@ -1,0 +1,10 @@
+services:
+  coredns:
+    image: liuweitao/coredns:latest
+    container_name: coredns
+    restart: always
+    volumes:
+      - ./Corefile:/etc/coredns/Corefile:cached
+    ports:
+      - 53:53/tcp
+      - 53:53/udp

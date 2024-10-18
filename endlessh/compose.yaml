@@ -1,0 +1,8 @@
+services:
+  endlessh:
+    image: liuweitao/endlessh:latest
+    ports:
+      - "22:22"
+    restart: always
+    volumes:
+      - ./endlessh_config:/etc/endlessh/endlessh.conf:ro

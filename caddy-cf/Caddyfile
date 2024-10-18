@@ -1,0 +1,16 @@
+{
+    # Global options
+    admin off
+    persist_config off
+}
+
+:80 {
+  respond "Hello, world!"
+}
+
+example.com {
+  tls {
+    dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+  }
+  respond "Hello from example.com!"
+}
