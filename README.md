@@ -9,13 +9,14 @@
 - FRP（服务器端和客户端）
 - Endlessh
 - Realm
+- Caddy-CF（带有 Cloudflare DNS 插件的 Caddy）
 
 ## 特性
 
-- 每日自动检查软件的新版本（除 Endlessh 外）
+- 每日自动检查软件的新版本（除 Endlessh 和 Caddy-CF 外）
 - 多架构构建（支持 amd64 和 arm64）
 - 自动将新镜像推送到 Docker Hub
-- 为每个软件进行版本跟踪（除 Endlessh 外）
+- 为每个软件进行版本跟踪（除 Endlessh 和 Caddy-CF 外）
 
 ## 工作流程
 
@@ -47,6 +48,12 @@
 - 构建最新版本的 Realm
 - 支持 amd64 和 arm64 架构
 
+### Caddy-CF
+
+- 文件：`.github/workflows/build-caddy-cf-docker.yml`
+- 构建带有 Cloudflare DNS 插件的 Caddy
+- 用于解决没有 80 和 443 端口的机器获取 HTTPS 证书的问题
+
 ## 使用方法
 
 要使用这些镜像，您可以从 Docker Hub 拉取：
@@ -58,6 +65,7 @@ docker pull liuweitao/frps:latest
 docker pull liuweitao/frpc:latest
 docker pull liuweitao/endlessh:latest
 docker pull liuweitao/realm:latest
+docker pull liuweitao/caddy-cf:latest
 ```
 
 ## 安全性
@@ -81,5 +89,6 @@ docker pull liuweitao/realm:latest
 - [FRP](https://github.com/fatedier/frp)
 - [Endlessh](https://github.com/skeeto/endlessh)
 - [Realm](https://github.com/realm/realm)
+- [Caddy](https://caddyserver.com/)
 
 感谢这些优秀的开源项目，本仓库仅用于个人使用目的的自动化构建。
