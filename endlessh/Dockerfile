@@ -8,6 +8,8 @@ RUN apk add --no-cache build-base git && \
 
 FROM alpine:latest
 
+LABEL maintainer="liuweitao"
+
 # 复制构建好的二进制文件
 COPY --from=builder /endlessh/endlessh /usr/local/bin/
 

@@ -12,6 +12,8 @@ RUN apk add --no-cache curl && \
 
 FROM alpine:latest
 
+LABEL maintainer="liuweitao"
+
 ARG TYPE="s"
 ENV FRP_TYPE=${TYPE}
 

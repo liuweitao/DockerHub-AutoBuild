@@ -9,6 +9,8 @@ RUN apk add --no-cache ca-certificates curl && \
 
 FROM alpine:latest
 
+LABEL maintainer="liuweitao"
+
 COPY --from=builder /usr/local/bin/coredns /usr/local/bin/coredns
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 

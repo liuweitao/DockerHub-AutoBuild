@@ -11,4 +11,3 @@ RUN apt-get update && \
     docker-php-ext-install bz2 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
