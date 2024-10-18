@@ -8,6 +8,7 @@
 - CoreDNS
 - FRP（服务器端和客户端）
 - Endlessh
+- Realm
 
 ## 特性
 
@@ -39,7 +40,12 @@
 
 - 文件：`.github/workflows/build-endlessh-docker.yml`
 - 构建 Endlessh SSH 蜜罐
-- 包含基本配置文件
+
+### Realm
+
+- 文件：`.github/workflows/build-realm-docker.yml`
+- 构建最新版本的 Realm
+- 支持 amd64 和 arm64 架构
 
 ## 使用方法
 
@@ -51,6 +57,7 @@ docker pull liuweitao/coredns:latest
 docker pull liuweitao/frps:latest
 docker pull liuweitao/frpc:latest
 docker pull liuweitao/endlessh:latest
+docker pull liuweitao/realm:latest
 ```
 
 ## 安全性
@@ -73,5 +80,6 @@ docker pull liuweitao/endlessh:latest
 - [CoreDNS](https://coredns.io/)
 - [FRP](https://github.com/fatedier/frp)
 - [Endlessh](https://github.com/skeeto/endlessh)
+- [Realm](https://github.com/realm/realm)
 
 感谢这些优秀的开源项目，本仓库仅用于个人使用目的的自动化构建。
