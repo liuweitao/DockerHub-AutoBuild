@@ -13,10 +13,10 @@
 
 ## 特性
 
-- 每日自动检查软件的新版本（除 Endlessh 和 Caddy-CF 外）
+- 每日自动检查软件的新版本
 - 多架构构建（支持 amd64 和 arm64）
 - 自动将新镜像推送到 Docker Hub
-- 为每个软件进行版本跟踪（除 Endlessh 和 Caddy-CF 外）
+- 为每个软件进行版本跟踪
 
 ## 工作流程
 
@@ -52,6 +52,7 @@
 
 - 文件：`.github/workflows/build-caddy-cf-docker.yml`
 - 构建带有 Cloudflare DNS 插件的 Caddy
+- 基于 Docker Hub 上最新的 Caddy 版本
 - 用于解决没有 80 和 443 端口的机器获取 HTTPS 证书的问题
 
 ## 使用方法
