@@ -1,15 +1,15 @@
 # 自用 Docker 镜像构建仓库
 
-这个仓库包含了我个人使用的 Docker 镜像的自动构建配置。所有的构建过程都是开源的，并且由 GitHub Actions 自动完成，确保了构建的安全性和透明度。
+这个仓库包含了我个人使用的 Docker 镜像的自动构建配置。所有的构建过程都是开源的，并且由 GitHub Actions 自动完成，确保了构建的安全性和透明度。这个项目旨在提供一系列易于使用、自动更新的 Docker 镜像，适用于各种自托管服务。
 
 ## 支持的镜像
 
-- Nextcloud
-- CoreDNS
-- FRP（服务器端和客户端）
-- Endlessh
-- Realm
-- Caddy-CF（带有 Cloudflare DNS 插件的 Caddy）
+- [Nextcloud](./nextcloud): 私有云存储解决方案
+- [CoreDNS](./coredns): 灵活可扩展的 DNS 服务器
+- [FRP](./frp)（服务器端和客户端）: 快速反向代理
+- [Endlessh](./endlessh): SSH 蜜罐
+- [Realm](./realm): 轻量级代理服务器
+- [Caddy-CF](./caddy-cf)（带有 Cloudflare DNS 插件的 Caddy）: 现代化 Web 服务器
 
 ## 特性
 
@@ -33,6 +33,8 @@
 3. 按照项目 README.md 中的说明进行配置
 4. 使用 `docker compose up -d` 启动服务
 
+注意：在使用任何镜像之前，请务必仔细阅读相应项目目录下的 README.md 文件，了解具体的配置和使用方法。
+
 ## 镜像列表
 
 要使用这些镜像，您可以从 Docker Hub 拉取：
@@ -45,10 +47,21 @@ docker pull liuweitao/frpc:latest
 docker pull liuweitao/endlessh:latest
 docker pull liuweitao/realm:latest
 docker pull liuweitao/caddy-cf:latest
+```
 
 ## 安全性
 
 所有的构建过程都在 GitHub Actions 中进行，您可以在工作流程文件中查看具体的构建步骤。这确保了构建过程的透明度和安全性。
+
+## 常见问题
+
+如果您在使用过程中遇到任何问题，请先检查以下几点：
+
+1. 确保您使用的是最新版本的镜像
+2. 检查您的配置文件是否正确
+3. 查看容器的日志以获取更多信息
+
+如果问题仍然存在，请在 Issues 中提出。
 
 ## 贡献和需求
 
@@ -62,11 +75,13 @@ docker pull liuweitao/caddy-cf:latest
 
 ## 致谢
 
+感谢以下开源项目，没有它们就没有这个仓库的存在：
+
+- [Docker](https://www.docker.com/)
+- [GitHub Actions](https://github.com/features/actions)
 - [Nextcloud](https://nextcloud.com/)
 - [CoreDNS](https://coredns.io/)
 - [FRP](https://github.com/fatedier/frp)
 - [Endlessh](https://github.com/skeeto/endlessh)
-- [Realm](https://github.com/realm/realm)
+- [Realm](https://github.com/zhboner/realm)
 - [Caddy](https://caddyserver.com/)
-
-感谢这些优秀的开源项目，本仓库仅用于个人使用目的的自动化构建。
