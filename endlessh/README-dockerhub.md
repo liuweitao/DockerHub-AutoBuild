@@ -1,6 +1,6 @@
 # Endlessh Docker 镜像
 
-这是一个 Endlessh SSH 蜜罐的 Docker 镜像配置。
+这是一个 Endlessh SSH 蜜罐的 Docker 镜像。
 
 ## 重要提醒
 

@@ -1,6 +1,6 @@
 # FRP (Fast Reverse Proxy) Docker 镜像
 
-这是 FRP 服务器端（frps）和客户端（frpc）的 Docker 镜像配置。
+这是 FRP 服务器端（frps）和客户端（frpc）的 Docker 镜像。
 
 ## 快速开始
 
