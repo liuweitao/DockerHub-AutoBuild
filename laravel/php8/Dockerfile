@@ -1,8 +1,8 @@
-ARG PHP_VERSION=8
-FROM php:${PHP_VERSION}-fpm-alpine
-
+ARG PHP_VERSION
 ARG UID
 ARG GID
+
+FROM php:${PHP_VERSION}-fpm-alpine
 
 ENV UID=${UID}
 ENV GID=${GID}

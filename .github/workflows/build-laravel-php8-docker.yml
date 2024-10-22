@@ -5,6 +5,10 @@ on:
     - cron: '0 0 * * *'  # 每天运行一次
   workflow_dispatch:  # 允许手动触发
 
+env:
+  UID: 1000
+  GID: 1000
+
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
@@ -28,14 +32,36 @@ jobs:
       - name: Check latest PHP 8 version
         id: check_version
         run: |
-          LATEST_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/php/tags?page_size=1&name=8-fpm-alpine | jq -r '.results[0].name' | cut -d'-' -f1)
-          CURRENT_VERSION=$(cat .php8-version || echo "")
-          if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
+          LATEST_VERSION=$(curl -s "https://hub.docker.com/v2/repositories/library/php/tags?page_size=100&name=8-fpm-alpine" | jq -r '.results[].name' | grep -E '^8.[0-9].[0-9]+-fpm-alpine[0-9.]*$' | sort -V | tail -n1)
+          if [ -z "$LATEST_VERSION" ]; then
+            echo "Failed to fetch latest PHP 8 version"
+            exit 1
+          fi
+          echo "Latest PHP 8 version: $LATEST_VERSION"
+          
+          if [ ! -f .php8-version ]; then
+            echo "No .php8-version file found, creating it with the latest version"
+            echo "$LATEST_VERSION" > .php8-version
             echo "BUILD_NEEDED=true" >> $GITHUB_ENV
             echo "PHP_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
           else
-            echo "BUILD_NEEDED=false" >> $GITHUB_ENV
+            CURRENT_VERSION=$(cat .php8-version)
+            if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
+              echo "New version found. Current: $CURRENT_VERSION, Latest: $LATEST_VERSION"
+              echo "BUILD_NEEDED=true" >> $GITHUB_ENV
+              echo "PHP_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+            else
+              echo "Version is up to date. Current: $CURRENT_VERSION"
+              echo "BUILD_NEEDED=false" >> $GITHUB_ENV
+            fi
           fi
+
+      - name: Debug environment variables
+        run: |
+          echo "BUILD_NEEDED: ${{ env.BUILD_NEEDED }}"
+          echo "PHP_VERSION: ${{ env.PHP_VERSION }}"
+          echo "UID: ${{ env.UID }}"
+          echo "GID: ${{ env.GID }}"
 
       - name: Build and push Docker image
         if: env.BUILD_NEEDED == 'true'
@@ -44,11 +70,12 @@ jobs:
           context: ./laravel/php8
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:${{ env.PHP_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:8-${{ env.PHP_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:8
-            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:latest
           build-args: |
             PHP_VERSION=${{ env.PHP_VERSION }}
+            UID=${{ env.UID }}
+            GID=${{ env.GID }}
 
       - name: Update version file
         if: env.BUILD_NEEDED == 'true'

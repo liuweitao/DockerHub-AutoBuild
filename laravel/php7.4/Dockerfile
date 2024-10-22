@@ -1,5 +1,6 @@
 FROM php:7.4-fpm-alpine
 
+ARG PHP_VERSION
 ARG UID
 ARG GID
 

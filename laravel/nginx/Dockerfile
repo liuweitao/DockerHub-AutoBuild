@@ -18,7 +18,7 @@ RUN addgroup -g ${GID} --system laravel && \
 COPY ./default.conf /etc/nginx/conf.d/
 
 USER laravel
-
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
+

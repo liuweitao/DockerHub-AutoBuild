@@ -5,6 +5,10 @@ on:
     - cron: '0 0 * * *'  # 每天运行一次
   workflow_dispatch:  # 允许手动触发
 
+env:
+  UID: 1000
+  GID: 1000
+
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
@@ -58,6 +62,8 @@ jobs:
         run: |
           echo "BUILD_NEEDED: ${{ env.BUILD_NEEDED }}"
           echo "NGINX_VERSION: ${{ env.NGINX_VERSION }}"
+          echo "UID: ${{ env.UID }}"
+          echo "GID: ${{ env.GID }}"
 
       - name: Build and push Docker image
         if: env.BUILD_NEEDED == 'true'
@@ -70,6 +76,8 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/laravel-nginx:latest
           build-args: |
             NGINX_VERSION=${{ env.NGINX_VERSION }}
+            UID=${{ env.UID }}
+            GID=${{ env.GID }}
 
       - name: Update version file
         if: env.BUILD_NEEDED == 'true'
