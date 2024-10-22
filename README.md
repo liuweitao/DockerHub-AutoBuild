@@ -10,6 +10,10 @@
 - [Endlessh](./endlessh): SSH 蜜罐
 - [Realm](./realm): 轻量级代理服务器
 - [Caddy-CF](./caddy-cf)（带有 Cloudflare DNS 插件的 Caddy）: 现代化 Web 服务器
+- [Laravel](./laravel): PHP 框架开发环境
+  - [Nginx](./laravel/nginx): 针对 Laravel 优化的 Nginx 服务器
+  - [PHP 7.4](./laravel/php7.4): Laravel PHP 7.4 运行环境
+  - [PHP 8](./laravel/php8): Laravel PHP 8 运行环境
 
 ## 特性
 

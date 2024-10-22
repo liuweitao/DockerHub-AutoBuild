@@ -70,7 +70,7 @@ jobs:
           context: ./laravel/php8
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:8-${{ env.PHP_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:${{ env.PHP_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:8
           build-args: |
             PHP_VERSION=${{ env.PHP_VERSION }}
