@@ -28,13 +28,20 @@ jobs:
       - name: Check latest Nginx version
         id: check_version
         run: |
-          LATEST_VERSION=$(curl -s "https://hub.docker.com/v2/repositories/library/nginx/tags?page_size=100" | jq -r '.results[].name' | grep -E '^stable-alpine[0-9]+\.[0-9]+$' | sort -V | tail -n1)
-          CURRENT_VERSION=$(cat .nginx-version || echo "")
+          LATEST_VERSION=$(curl -s "https://hub.docker.com/v2/repositories/library/nginx/tags?page_size=100&name=stable-alpine" | jq -r '.results[].name' | grep -E '^stable-alpine[0-9.]+$' | sort -V | tail -n1)
+          CURRENT_VERSION=$(cat .nginx-version 2>/dev/null || echo "")
           if [ -z "$LATEST_VERSION" ]; then
             echo "Failed to fetch latest Nginx stable-alpine version"
+            echo "LATEST_VERSION=$LATEST_VERSION"
+            echo "API Response:"
+            curl -s "https://hub.docker.com/v2/repositories/library/nginx/tags?page_size=100&name=stable-alpine" | jq '.'
             exit 1
           fi
           echo "Latest Nginx version: $LATEST_VERSION"
+          if [ -z "$CURRENT_VERSION" ]; then
+            echo "No current version found, setting to latest"
+            CURRENT_VERSION=$LATEST_VERSION
+          fi
           if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
             echo "BUILD_NEEDED=true" >> $GITHUB_ENV
             echo "NGINX_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
