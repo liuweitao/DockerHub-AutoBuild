@@ -4,6 +4,8 @@ ARG GID
 
 FROM php:${PHP_VERSION}-fpm-alpine
 
+LABEL maintainer="liuweitao"
+
 ENV UID=${UID}
 ENV GID=${GID}
 
