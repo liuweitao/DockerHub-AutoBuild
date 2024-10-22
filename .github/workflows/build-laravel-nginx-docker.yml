@@ -28,10 +28,10 @@ jobs:
       - name: Check latest Nginx version
         id: check_version
         run: |
-          LATEST_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/nginx/tags?page_size=1&name=stable-alpine | jq -r '.results[0].name')
+          LATEST_VERSION=$(curl -s "https://hub.docker.com/v2/repositories/library/nginx/tags?page_size=100" | jq -r '.results[].name' | grep -E '^stable-alpine[0-9]+\.[0-9]+$' | sort -V | tail -n1)
           CURRENT_VERSION=$(cat .nginx-version || echo "")
           if [ -z "$LATEST_VERSION" ]; then
-            echo "Failed to fetch latest Nginx version"
+            echo "Failed to fetch latest Nginx stable-alpine version"
             exit 1
           fi
           echo "Latest Nginx version: $LATEST_VERSION"
