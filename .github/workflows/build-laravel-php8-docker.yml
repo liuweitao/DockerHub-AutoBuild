@@ -1,0 +1,64 @@
+name: Build Laravel PHP 8 Docker Image
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天运行一次
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Check latest PHP 8 version
+        id: check_version
+        run: |
+          LATEST_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/php/tags?page_size=1&name=8-fpm-alpine | jq -r '.results[0].name' | cut -d'-' -f1)
+          CURRENT_VERSION=$(cat .php8-version || echo "")
+          if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
+            echo "BUILD_NEEDED=true" >> $GITHUB_ENV
+            echo "PHP_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+          else
+            echo "BUILD_NEEDED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Build and push Docker image
+        if: env.BUILD_NEEDED == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./laravel/php8
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:${{ env.PHP_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:8
+            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:latest
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
+
+      - name: Update version file
+        if: env.BUILD_NEEDED == 'true'
+        run: echo ${{ env.PHP_VERSION }} > .php8-version
+
+      - name: Commit and push if version changed
+        if: env.BUILD_NEEDED == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .php8-version
+          git commit -m "Update PHP 8 version to ${{ env.PHP_VERSION }}"
+          git push
