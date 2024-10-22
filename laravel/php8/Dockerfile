@@ -2,7 +2,7 @@ ARG PHP_VERSION
 ARG UID
 ARG GID
 
-FROM php:${PHP_VERSION}-fpm-alpine
+FROM php:${PHP_VERSION}
 
 LABEL maintainer="liuweitao"
 
