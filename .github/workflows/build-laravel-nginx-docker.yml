@@ -33,8 +33,10 @@ jobs:
           if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
             echo "BUILD_NEEDED=true" >> $GITHUB_ENV
             echo "NGINX_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+            echo "Latest Nginx version: $LATEST_VERSION"
           else
             echo "BUILD_NEEDED=false" >> $GITHUB_ENV
+            echo "No new Nginx version found"
           fi
 
       - name: Build and push Docker image
@@ -44,10 +46,10 @@ jobs:
           context: ./laravel/nginx
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-nginx:${{ env.NGINX_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-nginx:${{ env.NGINX_VERSION != '' && env.NGINX_VERSION || 'latest' }}
             ${{ secrets.DOCKERHUB_USERNAME }}/laravel-nginx:latest
           build-args: |
-            NGINX_VERSION=${{ env.NGINX_VERSION }}
+            NGINX_VERSION=${{ env.NGINX_VERSION != '' && env.NGINX_VERSION || 'stable-alpine' }}
 
       - name: Update version file
         if: env.BUILD_NEEDED == 'true'
