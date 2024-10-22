@@ -1,8 +1,9 @@
 ARG PHP_VERSION
-ARG UID=1000
-ARG GID=1000
 
 FROM php:${PHP_VERSION}
+
+ARG UID=1000
+ARG GID=1000
 
 LABEL maintainer="liuweitao"
 
