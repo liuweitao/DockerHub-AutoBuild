@@ -16,6 +16,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Fetch latest changes and update local repository
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git fetch origin master
+          git reset --hard origin/master
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -63,12 +70,10 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./caddy-cf
-          file: ./caddy-cf/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cf:${{ env.CADDY_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/caddy-cf:latest
-          platforms: linux/amd64,linux/arm64
           build-args: |
             CADDY_VERSION=${{ env.CADDY_VERSION }}
 
@@ -79,8 +84,6 @@ jobs:
       - name: Commit and push if version changed
         if: env.BUILD_NEEDED == 'true'
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
           git add .caddy-version
           git commit -m "Update Caddy version to ${{ env.CADDY_VERSION }}"
-          git push
+          git push origin master

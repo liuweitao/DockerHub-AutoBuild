@@ -16,6 +16,13 @@ jobs:
         with:
           fetch-depth: 0  # 获取所有历史记录，以便进行推送
 
+      - name: Fetch latest changes and update local repository
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git fetch origin master
+          git reset --hard origin/master
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -88,8 +95,6 @@ jobs:
       - name: Commit and push if version changed
         if: env.BUILD_NEEDED == 'true'
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
           git add .nextcloud-version
           git commit -m "Update Nextcloud version to ${{ env.NEXTCLOUD_VERSION }}"
-          git push
+          git push origin master
