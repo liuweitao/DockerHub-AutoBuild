@@ -1,5 +1,7 @@
 FROM alpine:latest AS builder
 
+LABEL maintainer="liuweitao"
+
 # 安装必要的软件包并构建 Endlessh
 RUN apk add --no-cache build-base git && \
     git clone https://github.com/skeeto/endlessh.git /endlessh && \
@@ -7,8 +9,6 @@ RUN apk add --no-cache build-base git && \
     make
 
 FROM alpine:latest
-
-LABEL maintainer="liuweitao"
 
 # 复制构建好的二进制文件
 COPY --from=builder /endlessh/endlessh /usr/local/bin/
