@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-LABEL maintainer="liuweitao"
+LABEL org.opencontainers.image.authors="liuweitao"
 
 ARG VERSION
 ARG TARGETARCH

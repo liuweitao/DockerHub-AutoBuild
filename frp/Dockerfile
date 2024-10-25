@@ -1,7 +1,5 @@
 FROM alpine:latest AS builder
 
-LABEL maintainer="liuweitao"
-
 ARG TARGETARCH
 ARG TYPE="s"
 ARG VERSION
@@ -13,6 +11,8 @@ RUN apk add --no-cache curl && \
     mv /tmp/frp/frp${TYPE}.toml /tmp/config.toml
 
 FROM alpine:latest
+
+LABEL org.opencontainers.image.authors="liuweitao"
 
 ARG TYPE="s"
 ENV FRP_TYPE=${TYPE}

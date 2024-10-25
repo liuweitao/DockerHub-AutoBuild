@@ -5,7 +5,7 @@ FROM php:${PHP_VERSION}
 ARG UID=1000
 ARG GID=1000
 
-LABEL maintainer="liuweitao"
+LABEL org.opencontainers.image.authors="liuweitao"
 
 ENV UID=${UID}
 ENV GID=${GID}

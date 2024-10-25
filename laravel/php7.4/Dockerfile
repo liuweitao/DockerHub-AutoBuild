@@ -1,6 +1,6 @@
 FROM php:7.4-fpm-alpine
 
-LABEL maintainer="liuweitao"
+LABEL org.opencontainers.image.authors="liuweitao"
 
 ARG PHP_VERSION
 ARG UID

@@ -1,7 +1,7 @@
 ARG NGINX_VERSION=stable-alpine
 FROM nginx:${NGINX_VERSION}
 
-LABEL maintainer="liuweitao"
+LABEL org.opencontainers.image.authors="liuweitao"
 
 ARG UID
 ARG GID

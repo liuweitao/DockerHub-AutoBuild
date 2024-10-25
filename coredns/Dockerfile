@@ -1,5 +1,4 @@
 FROM alpine:latest AS builder
-LABEL maintainer="liuweitao"
 
 ARG TARGETARCH
 ARG VERSION
@@ -9,6 +8,8 @@ RUN apk add --no-cache ca-certificates curl && \
     mv /tmp/coredns /usr/local/bin/coredns
 
 FROM alpine:latest
+
+LABEL org.opencontainers.image.authors="liuweitao"
 
 COPY --from=builder /usr/local/bin/coredns /usr/local/bin/coredns
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

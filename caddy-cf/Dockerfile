@@ -6,6 +6,6 @@ RUN xcaddy build \
 
 FROM caddy:${CADDY_VERSION}
 
-LABEL maintainer="liuweitao"
+LABEL org.opencontainers.image.authors="liuweitao"
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy

@@ -1,7 +1,7 @@
 ARG NEXTCLOUD_VERSION=30.0.0
 FROM nextcloud:${NEXTCLOUD_VERSION}
 
-LABEL maintainer="liuweitao"
+LABEL org.opencontainers.image.authors="liuweitao"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
