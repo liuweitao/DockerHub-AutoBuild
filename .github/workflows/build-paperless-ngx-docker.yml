@@ -1,0 +1,85 @@
+name: Build Paperless-ngx Docker Image
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天运行一次
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch latest changes and update local repository
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git fetch origin master
+          git reset --hard origin/master
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Check latest Paperless-ngx version
+        id: check_version
+        run: |
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/paperless-ngx/paperless-ngx/releases/latest | jq -r .tag_name | sed 's/^v//')
+          if [ -z "$LATEST_VERSION" ]; then
+            echo "Failed to fetch latest version"
+            exit 1
+          fi
+          echo "Latest version: $LATEST_VERSION"
+          
+          if [ ! -f .paperless-version ]; then
+            echo "No .paperless-version file found, creating it with the latest version"
+            echo "$LATEST_VERSION" > .paperless-version
+            echo "BUILD_NEEDED=true" >> $GITHUB_ENV
+            echo "PAPERLESS_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+          else
+            CURRENT_VERSION=$(cat .paperless-version)
+            if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
+              echo "New version found. Current: $CURRENT_VERSION, Latest: $LATEST_VERSION"
+              echo "BUILD_NEEDED=true" >> $GITHUB_ENV
+              echo "PAPERLESS_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+            else
+              echo "Version is up to date. Current: $CURRENT_VERSION"
+              echo "BUILD_NEEDED=false" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Build and push Docker image
+        if: env.BUILD_NEEDED == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./paperless-ngx
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/paperless-ngx:${{ env.PAPERLESS_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/paperless-ngx:latest
+
+      - name: Update version file
+        if: env.BUILD_NEEDED == 'true'
+        run: echo ${{ env.PAPERLESS_VERSION }} > .paperless-version
+
+      - name: Commit and push if version changed
+        if: env.BUILD_NEEDED == 'true'
+        run: |
+          git pull origin master --rebase
+          git add .paperless-version
+          git commit -m "Update Paperless-ngx version to ${{ env.PAPERLESS_VERSION }}"
+          git push origin master || {
+            git pull origin master --rebase
+            git push origin master
+          }

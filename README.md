@@ -14,6 +14,7 @@
   - [Nginx](./laravel/nginx): 针对 Laravel 优化的 Nginx 服务器
   - [PHP 7.4](./laravel/php7.4): Laravel PHP 7.4 运行环境
   - [PHP 8](./laravel/php8): Laravel PHP 8 运行环境
+- [Paperless-ngx](./paperless-ngx): 支持中文 OCR 的文档管理系统
 
 ## 特性
 
@@ -51,6 +52,10 @@ docker pull liuweitao/frpc:latest
 docker pull liuweitao/endlessh:latest
 docker pull liuweitao/realm:latest
 docker pull liuweitao/caddy-cf:latest
+docker pull liuweitao/laravel-nginx:latest
+docker pull liuweitao/laravel-php:7.4
+docker pull liuweitao/laravel-php:8
+docker pull liuweitao/paperless-ngx:latest
 ```
 
 ## 安全性
@@ -89,3 +94,7 @@ docker pull liuweitao/caddy-cf:latest
 - [Endlessh](https://github.com/skeeto/endlessh)
 - [Realm](https://github.com/zhboner/realm)
 - [Caddy](https://caddyserver.com/)
+- [Laravel](https://laravel.com/)
+- [Nginx](https://nginx.org/)
+- [PHP](https://www.php.net/)
+- [Paperless-ngx](https://docs.paperless-ngx.com/)
