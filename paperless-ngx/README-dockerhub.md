@@ -7,8 +7,6 @@
 - 基于官方 Paperless-ngx 镜像
 - 支持中文简体和繁体 OCR
 - 自动更新到最新版本
-- 支持 PostgreSQL 数据库
-- 集成 Apache Tika 用于文档解析
 
 ## 快速开始
 
