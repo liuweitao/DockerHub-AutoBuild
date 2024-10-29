@@ -76,10 +76,17 @@ jobs:
       - name: Commit and push if version changed
         if: env.BUILD_NEEDED == 'true'
         run: |
-          git pull origin master --rebase
           git add .paperless-version
           git commit -m "Update Paperless-ngx version to ${{ env.PAPERLESS_VERSION }}"
+          
           git push origin master || {
-            git pull origin master --rebase
+            git branch temp-branch
+            git checkout master
+            git pull origin master
+            git checkout temp-branch
+            git rebase master
+            git checkout master
+            git merge temp-branch
+            git branch -D temp-branch
             git push origin master
           }
