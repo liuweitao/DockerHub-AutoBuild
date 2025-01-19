@@ -63,7 +63,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/frps:${{ env.FRP_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/frps:latest
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           build-args: |
             VERSION=${{ env.FRP_VERSION }}
             TYPE=s
@@ -78,7 +78,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/frpc:${{ env.FRP_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/frpc:latest
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           build-args: |
             VERSION=${{ env.FRP_VERSION }}
             TYPE=c
