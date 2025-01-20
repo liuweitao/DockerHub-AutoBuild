@@ -1,0 +1,8 @@
+services:
+  frpc:
+    image: liuweitao/frpc:latest
+    container_name: frpc
+    restart: always
+    volumes:
+      - ./frpc.toml:/etc/frp/config.toml:cached
+    network_mode: "host"
