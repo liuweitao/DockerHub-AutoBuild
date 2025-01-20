@@ -8,7 +8,7 @@
 
 ```bash
 docker run -d -p 7000:7000 -p 7500:7500 \
-  -v ./frps.toml:/etc/frp/frps.toml:ro \
+  -v ./frps.toml:/etc/frp/config.toml:ro \
   liuweitao/frps:latest
 ```
 
@@ -16,36 +16,39 @@ docker run -d -p 7000:7000 -p 7500:7500 \
 
 ```bash
 docker run -d --network host \
-  -v ./frpc.toml:/etc/frp/frpc.toml:ro \
+  -v ./frpc.toml:/etc/frp/config.toml:ro \
   liuweitao/frpc:latest
 ```
 
 ## Docker Compose
 
 以下是 `compose.yaml` 文件示例:
-
+#### 服务端
 ```yaml
 services:
   frps:
     image: liuweitao/frps:latest
-    ports:
-      - "7000:7000"
-      - "7500:7500"
-    volumes:
-      - ./frps.toml:/etc/frp/frps.toml:ro
+    container_name: frps
     restart: always
-
+    volumes:
+      - ./frps.toml:/etc/frp/config.toml:ro
+    network_mode: "host"
+```
+#### 客户端
+```yaml
+services:
   frpc:
     image: liuweitao/frpc:latest
-    network_mode: host
-    volumes:
-      - ./frpc.toml:/etc/frp/frpc.toml:ro
+    container_name: frpc
     restart: always
+    volumes:
+      - ./frpc.toml:/etc/frp/config.toml:ro
+    network_mode: "host"
 ```
 
 ## 配置说明
 
-- frps 服务使用端口映射模式，开放了 7000 和 7500 端口。
+- frps 服务使用 host 网络模式，直接使用主机网络。
 - frpc 服务使用 host 网络模式，直接使用主机网络。
 - 两个服务都将各自的配置文件以只读方式挂载到容器中。
 
