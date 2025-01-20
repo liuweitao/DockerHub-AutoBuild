@@ -1,0 +1,8 @@
+services:
+  frps:
+    image: liuweitao/frps:latest
+    container_name: frps
+    restart: always
+    volumes:
+      - ./frps.toml:/etc/frp/config.toml:ro
+    network_mode: "host"
