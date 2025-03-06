@@ -15,6 +15,7 @@
   - [PHP 7.4](./laravel/php7.4): Laravel PHP 7.4 运行环境
   - [PHP 8](./laravel/php8): Laravel PHP 8 运行环境
 - [Paperless-ngx](./paperless-ngx): 支持中文 OCR 的文档管理系统
+- [ADB](./adb): Android Debug Bridge 工具集
 
 ## 特性
 
@@ -56,6 +57,7 @@ docker pull liuweitao/laravel-nginx:latest
 docker pull liuweitao/laravel-php:7.4
 docker pull liuweitao/laravel-php:8
 docker pull liuweitao/paperless-ngx:latest
+docker pull liuweitao/adb:latest
 ```
 
 ## 安全性
