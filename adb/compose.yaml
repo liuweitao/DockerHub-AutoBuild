@@ -4,6 +4,7 @@ services:
     container_name: adb
     volumes:
       - ./apks:/workspace/apks  # 映射本地apk文件夹到容器内
+      - ./android:/root/.android  # 持久化安卓密钥
       - /dev/bus/usb:/dev/bus/usb  # USB设备映射
     environment:
       - TZ=Asia/Shanghai  # 设置时区
