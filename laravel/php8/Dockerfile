@@ -10,15 +10,18 @@ LABEL org.opencontainers.image.authors="liuweitao"
 ENV UID=${UID}
 ENV GID=${GID}
 
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-    && apk add --no-cache \
+RUN set -eux; \
+    apk add --no-cache \
+        $PHPIZE_DEPS \
         imap-dev \
         openssl-dev \
-    && docker-php-ext-configure imap --with-imap --with-imap-ssl \
-    && docker-php-ext-install pdo pdo_mysql imap \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && apk del .build-deps
+        krb5-dev \
+        ; \
+    docker-php-ext-install -j"$(nproc)" pdo pdo_mysql; \
+    pecl install imap redis; \
+    docker-php-ext-enable imap redis; \
+    apk del $PHPIZE_DEPS krb5-dev
+
 
 RUN delgroup dialout \
     && addgroup -S -g ${GID} laravel \
