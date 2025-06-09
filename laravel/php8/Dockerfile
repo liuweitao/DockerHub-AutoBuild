@@ -15,6 +15,7 @@ RUN set -eux; \
         $PHPIZE_DEPS \
         imap-dev \
         openssl-dev \
+<<<<<<< HEAD
         krb5-dev \
         ; \
     docker-php-ext-install -j"$(nproc)" pdo pdo_mysql; \
@@ -22,6 +23,14 @@ RUN set -eux; \
     docker-php-ext-enable imap redis; \
     apk del $PHPIZE_DEPS krb5-dev
 
+=======
+		libxcrypt-dev \
+    && docker-php-ext-configure imap --with-imap --with-imap-ssl \
+    && docker-php-ext-install pdo pdo_mysql imap \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
+>>>>>>> be302030ecd24b0bd3fa473b6f9785eefa2b5b7c
 
 RUN delgroup dialout \
     && addgroup -S -g ${GID} laravel \
