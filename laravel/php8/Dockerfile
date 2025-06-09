@@ -14,6 +14,7 @@ RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && apk add --no-cache \
         imap-dev \
         openssl-dev \
+		libxcrypt-dev \
     && docker-php-ext-configure imap --with-imap --with-imap-ssl \
     && docker-php-ext-install pdo pdo_mysql imap \
     && pecl install redis \
