@@ -73,8 +73,8 @@ jobs:
           context: ./caddy-webdav # Changed context to caddy-webdav
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-webdav:${{ env.CADDY_VERSION }} # Changed image name
-            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-webdav:latest # Changed image name
+            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-webdav:${{ env.CADDY_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-webdav:latest
           build-args: |
             CADDY_VERSION=${{ env.CADDY_VERSION }}
 
