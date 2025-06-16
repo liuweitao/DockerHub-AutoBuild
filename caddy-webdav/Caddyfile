@@ -1,0 +1,40 @@
+{
+    # Global options
+    admin off
+    persist_config off
+}
+
+:80 {
+  respond "Hello, world!"
+}
+
+example.com {
+  tls {
+    dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+  }
+  respond "Hello from example.com!"
+}
+
+# WebDAV configuration
+# Replace 'yourdomain.com' with your actual domain or remove if not using a specific domain for WebDAV
+yourdomain.com/webdav/* {
+  # Optional: Basic authentication
+  # basicauth /* {
+  #   username JGFwcjEkYWRkZmRmZGQkZFlqMTdHZ0guLlEvNms5QjN0cFZNLg # replace with your hashed password
+  # }
+
+  webdav {
+    root /srv/webdav
+    prefix /webdav
+  }
+}
+
+# If you want WebDAV on a specific port without a domain
+# :2015 {
+#   route /webdav/* {
+#     webdav {
+#       root /srv/webdav
+#       prefix /webdav
+#     }
+#   }
+# }

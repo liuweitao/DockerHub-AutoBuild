@@ -1,0 +1,94 @@
+name: Build Caddy-WebDAV Docker Image
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天运行一次
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch latest changes and update local repository
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git fetch origin master
+          git reset --hard origin/master
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Check for new Caddy version
+        id: check-version
+        run: |
+          # 获取可用的 Docker 标签
+          AVAILABLE_TAGS=$(curl -s https://registry.hub.docker.com/v2/repositories/library/caddy/tags?page_size=100 | jq -r '.results[].name')
+          echo "Available Docker tags:"
+          echo "$AVAILABLE_TAGS"
+          
+          # 查找匹配的标签，只使用纯数字版本
+          MATCHING_TAG=$(echo "$AVAILABLE_TAGS" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | sort -V | tail -n 1)
+          
+          if [ -z "$MATCHING_TAG" ]; then
+            echo "No suitable tag found"
+            exit 1
+          fi
+          
+          echo "CADDY_VERSION=$MATCHING_TAG" >> $GITHUB_ENV
+          echo "Found matching tag: $MATCHING_TAG"
+          
+          # This workflow will use the same .caddy-version file to track the base Caddy version
+          if [ -f .caddy-version ]; then
+            CURRENT_VERSION=$(cat .caddy-version)
+          else
+            CURRENT_VERSION=""
+          fi
+          
+          if [ "$MATCHING_TAG" != "$CURRENT_VERSION" ]; then
+            echo "New version detected"
+            echo "BUILD_NEEDED=true" >> $GITHUB_ENV
+          else
+            echo "No new version"
+            echo "BUILD_NEEDED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Build and push Docker image
+        if: env.BUILD_NEEDED == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./caddy-webdav # Changed context to caddy-webdav
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-webdav:${{ env.CADDY_VERSION }} # Changed image name
+            ${{ secrets.DOCKERHUB_USERNAME }}/caddy-webdav:latest # Changed image name
+          build-args: |
+            CADDY_VERSION=${{ env.CADDY_VERSION }}
+
+      - name: Update version file
+        if: env.BUILD_NEEDED == 'true'
+        # This step updates the common .caddy-version file.
+        # If a separate version for caddy-webdav builds (based on Caddy version) is needed,
+        # this logic might need adjustment (e.g., a different version file or no version file update from this specific workflow).
+        # For now, assuming it updates the shared Caddy version.
+        run: echo ${{ env.CADDY_VERSION }} > .caddy-version
+
+      - name: Commit and push if version changed
+        if: env.BUILD_NEEDED == 'true'
+        run: |
+          git add .caddy-version
+          git commit -m "Update Caddy version to ${{ env.CADDY_VERSION }} (triggered by caddy-webdav build)"
+          git push origin master

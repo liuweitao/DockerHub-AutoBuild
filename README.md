@@ -10,6 +10,7 @@
 - [Endlessh](./endlessh): SSH 蜜罐
 - [Realm](./realm): 轻量级代理服务器
 - [Caddy-CF](./caddy-cf)（带有 Cloudflare DNS 插件的 Caddy）: 现代化 Web 服务器
+- [Caddy-WebDAV](./caddy-webdav)（带有 WebDAV 模块的 Caddy）: 支持 WebDAV 的现代化 Web 服务器
 - [Laravel](./laravel): PHP 框架开发环境
   - [Nginx](./laravel/nginx): 针对 Laravel 优化的 Nginx 服务器
   - [PHP 7.4](./laravel/php7.4): Laravel PHP 7.4 运行环境
@@ -53,6 +54,7 @@ docker pull liuweitao/frpc:latest
 docker pull liuweitao/endlessh:latest
 docker pull liuweitao/realm:latest
 docker pull liuweitao/caddy-cf:latest
+docker pull liuweitao/caddy-webdav:latest
 docker pull liuweitao/laravel-nginx:latest
 docker pull liuweitao/laravel-php:7.4
 docker pull liuweitao/laravel-php:8
