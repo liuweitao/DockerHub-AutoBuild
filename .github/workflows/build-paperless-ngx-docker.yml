@@ -34,12 +34,27 @@ jobs:
 
       - name: Check latest Paperless-ngx version
         id: check_version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/paperless-ngx/paperless-ngx/releases/latest | jq -r .tag_name | sed 's/^v//')
-          if [ -z "$LATEST_VERSION" ]; then
-            echo "Failed to fetch latest version"
+          set -o pipefail
+
+          if ! LATEST_VERSION=$(curl --fail --silent --show-error --location \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/paperless-ngx/paperless-ngx/releases/latest \
+            | jq -er '.tag_name | strings' \
+            | sed 's/^v//'); then
+            echo "Failed to fetch a valid latest version"
             exit 1
           fi
+
+          if [[ ! "$LATEST_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid version format: $LATEST_VERSION"
+            exit 1
+          fi
+
           echo "Latest version: $LATEST_VERSION"
           
           if [ ! -f .paperless-version ]; then
@@ -65,6 +80,8 @@ jobs:
         with:
           context: ./paperless-ngx
           push: true
+          build-args: |
+            PAPERLESS_VERSION=${{ env.PAPERLESS_VERSION }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/paperless-ngx:${{ env.PAPERLESS_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/paperless-ngx:latest

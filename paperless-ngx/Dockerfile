@@ -1,4 +1,5 @@
-FROM ghcr.io/paperless-ngx/paperless-ngx:latest
+ARG PAPERLESS_VERSION=latest
+FROM ghcr.io/paperless-ngx/paperless-ngx:${PAPERLESS_VERSION}
 
 LABEL org.opencontainers.image.authors="liuweitao"
 
