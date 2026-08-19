@@ -19,8 +19,8 @@ example.com {
 # Replace 'yourdomain.com' with your actual domain or remove if not using a specific domain for WebDAV
 yourdomain.com/webdav/* {
   # Optional: Basic authentication
-  # basicauth /* {
-  #   username JGFwcjEkYWRkZmRmZGQkZFlqMTdHZ0guLlEvNms5QjN0cFZNLg # replace with your hashed password
+  # basic_auth {
+  #   username $2a$14$example-hash # replace with the output of: caddy hash-password
   # }
 
   webdav {

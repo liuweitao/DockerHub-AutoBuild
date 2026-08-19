@@ -4,7 +4,7 @@
 
 ## 快速开始
 
-使用以下命令运行 Caddy-CF 镜像:
+使用以下命令运行 Caddy-CF 镜像：
 
 ```bash
 docker run -d --network host \
@@ -16,8 +16,6 @@ docker run -d --network host \
 ```
 
 ## Docker Compose
-
-以下是 `compose.yaml` 文件示例:
 
 ```yaml
 services:
@@ -47,7 +45,4 @@ services:
 
 ## 源码
 
-此镜像是 DockerHub-AutoBuild 项目的一部分:
-https://github.com/liuweitao/DockerHub-AutoBuild/
-
-更多信息和更新，请访问 GitHub 仓库。
+此镜像是 [DockerHub-AutoBuild](https://github.com/liuweitao/DockerHub-AutoBuild/) 项目的一部分。

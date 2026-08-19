@@ -1,0 +1,24 @@
+{
+  order forward_proxy before file_server
+  log {
+    exclude http.log.error # Avoid logging user activity
+  }
+}
+
+# Replace example.com and the credentials before starting the service.
+# :443 must appear first for forward proxy requests to all origins.
+:443, example.com {
+  tls your-email@example.com
+  encode
+
+  forward_proxy {
+    basic_auth {env.NAIVE_USERNAME} {env.NAIVE_PASSWORD}
+    hide_ip
+    hide_via
+    probe_resistance
+  }
+
+  file_server {
+    root /srv
+  }
+}

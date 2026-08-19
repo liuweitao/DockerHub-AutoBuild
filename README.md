@@ -9,8 +9,9 @@
 - [FRP](./frp)（服务器端和客户端）: 快速反向代理
 - [Endlessh](./endlessh): SSH 蜜罐
 - [Realm](./realm): 轻量级代理服务器
-- [Caddy-CF](./caddy-cf)（带有 Cloudflare DNS 插件的 Caddy）: 现代化 Web 服务器
-- [Caddy-WebDAV](./caddy-webdav)（带有 WebDAV 模块的 Caddy）: 支持 WebDAV 的现代化 Web 服务器
+- [Caddy-CF](./caddy/variants/cf)（带有 Cloudflare DNS 插件的 Caddy）: 现代化 Web 服务器
+- [Caddy-WebDAV](./caddy/variants/webdav)（带有 Cloudflare DNS 和 WebDAV 模块的 Caddy）: 支持 WebDAV 的现代化 Web 服务器
+- [Caddy-Naïve](./caddy/variants/naive)（带有 NaïveProxy `forward_proxy` 模块的 Caddy）: NaïveProxy 服务端
 - [Laravel](./laravel): PHP 框架开发环境
   - [Nginx](./laravel/nginx): 针对 Laravel 优化的 Nginx 服务器
   - [PHP 7.4](./laravel/php7.4): Laravel PHP 7.4 运行环境
@@ -27,7 +28,7 @@
 
 ## 项目结构
 
-每个项目都包含以下文件：
+每类镜像都提供以下构建或使用文件；Caddy 的多个变体共用一个 Dockerfile 和自动构建流程：
 - `Dockerfile`: 用于构建 Docker 镜像
 - `compose.yaml`: Docker Compose 配置文件
 - `README.md`: 项目说明文件
@@ -55,6 +56,7 @@ docker pull liuweitao/endlessh:latest
 docker pull liuweitao/realm:latest
 docker pull liuweitao/caddy-cf:latest
 docker pull liuweitao/caddy-webdav:latest
+docker pull liuweitao/caddy-naive:latest
 docker pull liuweitao/laravel-nginx:latest
 docker pull liuweitao/laravel-php:7.4
 docker pull liuweitao/laravel-php:8

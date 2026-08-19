@@ -1,0 +1,13 @@
+services:
+  caddy:
+    image: liuweitao/caddy-naive:latest
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data:/data
+      - ./config:/config
+      - ./site:/srv:ro
+    environment:
+      - NAIVE_USERNAME=change-me
+      - NAIVE_PASSWORD=change-me
+    restart: unless-stopped

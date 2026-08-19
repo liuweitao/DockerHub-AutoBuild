@@ -27,6 +27,4 @@
 - `Caddyfile`: Caddy 的主配置文件。你可以在这里定义你的网站和路由规则。
 - 在 `compose.yaml` 中，确保设置了正确的 `CLOUDFLARE_API_TOKEN`。
 
-### Caddyfile 示例说明
-
-更多配置选项，请参考 [Caddy 官方文档](https://caddyserver.com/docs/).
+更多配置选项，请参考 [Caddy 官方文档](https://caddyserver.com/docs/)。
