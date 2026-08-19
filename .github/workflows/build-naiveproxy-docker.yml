@@ -1,0 +1,185 @@
+name: Build NaiveProxy Docker Image
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'naiveproxy/**'
+      - '.github/workflows/build-naiveproxy-docker.yml'
+  schedule:
+    - cron: '30 0 * * *'  # 每天北京时间 08:30 检查
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '指定上游 release 标签；留空则构建最新版本'
+        required: false
+        type: string
+
+concurrency:
+  group: build-naiveproxy
+  cancel-in-progress: false
+
+jobs:
+  check_version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      sha256_amd64: ${{ steps.release.outputs.sha256_amd64 }}
+      sha256_arm64: ${{ steps.release.outputs.sha256_arm64 }}
+      sha256_armv7: ${{ steps.release.outputs.sha256_armv7 }}
+      build_needed: ${{ steps.release.outputs.build_needed }}
+      publish_latest: ${{ steps.release.outputs.publish_latest }}
+      version_changed: ${{ steps.release.outputs.version_changed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Check NaiveProxy release
+        id: release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          get_release() {
+            curl --fail --silent --show-error \
+              --retry 3 --retry-delay 2 --retry-all-errors \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              "$1"
+          }
+
+          if [ -n "${REQUESTED_VERSION}" ]; then
+            case "${REQUESTED_VERSION}" in
+              v*) REQUESTED_TAG="${REQUESTED_VERSION}" ;;
+              *) REQUESTED_TAG="v${REQUESTED_VERSION}" ;;
+            esac
+            RELEASE_JSON=$(get_release \
+              "https://api.github.com/repos/klzgrad/naiveproxy/releases/tags/${REQUESTED_TAG}")
+            PUBLISH_LATEST=false
+          else
+            RELEASE_JSON=$(get_release \
+              'https://api.github.com/repos/klzgrad/naiveproxy/releases/latest')
+            PUBLISH_LATEST=true
+          fi
+
+          VERSION=$(jq -er '.tag_name' <<< "${RELEASE_JSON}")
+
+          get_asset_sha256() {
+            local asset_name="naiveproxy-${VERSION}-$1.tar.xz"
+            local digest
+            digest=$(jq -er --arg name "${asset_name}" \
+              '.assets[] | select(.name == $name) | .digest' \
+              <<< "${RELEASE_JSON}")
+            case "${digest}" in
+              sha256:*) printf '%s' "${digest#sha256:}" ;;
+              *) echo "Missing SHA-256 digest for ${asset_name}" >&2; return 1 ;;
+            esac
+          }
+
+          SHA256_AMD64=$(get_asset_sha256 'linux-x64')
+          SHA256_ARM64=$(get_asset_sha256 'linux-arm64')
+          SHA256_ARMV7=$(get_asset_sha256 'linux-arm')
+
+          CURRENT_VERSION=''
+          if [ -f .naiveproxy-version ]; then
+            CURRENT_VERSION=$(tr -d '\r\n' < .naiveproxy-version)
+          fi
+
+          VERSION_CHANGED=false
+          if [ "${VERSION}" != "${CURRENT_VERSION}" ]; then
+            VERSION_CHANGED=true
+          fi
+
+          BUILD_NEEDED=true
+          if [ "${{ github.event_name }}" = 'schedule' ] && [ "${VERSION_CHANGED}" = false ]; then
+            BUILD_NEEDED=false
+          fi
+
+          echo "NaiveProxy: ${CURRENT_VERSION:-none} -> ${VERSION}"
+          echo "Build needed: ${BUILD_NEEDED}"
+          echo "Publish latest: ${PUBLISH_LATEST}"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "sha256_amd64=${SHA256_AMD64}" >> "${GITHUB_OUTPUT}"
+          echo "sha256_arm64=${SHA256_ARM64}" >> "${GITHUB_OUTPUT}"
+          echo "sha256_armv7=${SHA256_ARMV7}" >> "${GITHUB_OUTPUT}"
+          echo "build_needed=${BUILD_NEEDED}" >> "${GITHUB_OUTPUT}"
+          echo "publish_latest=${PUBLISH_LATEST}" >> "${GITHUB_OUTPUT}"
+          echo "version_changed=${VERSION_CHANGED}" >> "${GITHUB_OUTPUT}"
+
+  build_image:
+    needs: check_version
+    if: needs.check_version.outputs.build_needed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push NaiveProxy
+        uses: docker/build-push-action@v7
+        with:
+          context: ./naiveproxy
+          file: ./naiveproxy/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          build-args: |
+            NAIVE_VERSION=${{ needs.check_version.outputs.version }}
+            NAIVE_SHA256_AMD64=${{ needs.check_version.outputs.sha256_amd64 }}
+            NAIVE_SHA256_ARM64=${{ needs.check_version.outputs.sha256_arm64 }}
+            NAIVE_SHA256_ARMV7=${{ needs.check_version.outputs.sha256_armv7 }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/naiveproxy:${{ needs.check_version.outputs.version }}
+            ${{ needs.check_version.outputs.publish_latest == 'true' && format('{0}/naiveproxy:latest', secrets.DOCKERHUB_USERNAME) || '' }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/liuweitao/DockerHub-AutoBuild
+            org.opencontainers.image.version=${{ needs.check_version.outputs.version }}
+          cache-from: type=gha,scope=naiveproxy
+          cache-to: type=gha,mode=max,scope=naiveproxy
+
+  update_version:
+    needs:
+      - check_version
+      - build_image
+    if: needs.check_version.outputs.publish_latest == 'true' && needs.check_version.outputs.version_changed == 'true' && needs.build_image.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Update tracked NaiveProxy version
+        shell: bash
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git pull --ff-only origin master
+          echo "${{ needs.check_version.outputs.version }}" > .naiveproxy-version
+          git add .naiveproxy-version
+
+          if git diff --cached --quiet; then
+            echo "NaiveProxy version is already up to date"
+            exit 0
+          fi
+
+          git commit -m "更新 NaïveProxy 版本至 ${{ needs.check_version.outputs.version }}"
+          git push origin master
