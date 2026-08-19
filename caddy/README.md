@@ -20,7 +20,15 @@
 - [`webdav`](./variants/webdav)
 - [`naive`](./variants/naive)
 
-镜像由 [build-caddy-images.yml](../.github/workflows/build-caddy-images.yml) 统一检查 Caddy 版本、构建并发布。
+镜像由 [build-caddy-images.yml](../.github/workflows/build-caddy-images.yml) 统一检查 Caddy 和插件版本、构建并发布。定时检查采用按依赖选择构建：
+
+- Caddy 更新：构建全部镜像。
+- Cloudflare 插件更新：构建 `caddy-cf` 和 `caddy-webdav`。
+- WebDAV 插件更新：只构建 `caddy-webdav`。
+- Naïve `forwardproxy` 更新：只构建 `caddy-naive`。
+- 没有任何更新：跳过构建。
+
+构建时会使用检测到的完整 commit SHA 固定插件版本，全部选中镜像成功后才更新仓库中的版本记录。代码推送或手动触发工作流时会完整构建三个镜像。
 
 ## 本地构建
 

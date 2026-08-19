@@ -16,106 +16,196 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  check_version:
+  check_versions:
     runs-on: ubuntu-latest
     outputs:
-      caddy_version: ${{ steps.check_version.outputs.caddy_version }}
-      build_needed: ${{ steps.check_version.outputs.build_needed }}
-      version_changed: ${{ steps.check_version.outputs.version_changed }}
+      caddy_version: ${{ steps.check_versions.outputs.caddy_version }}
+      cloudflare_version: ${{ steps.check_versions.outputs.cloudflare_version }}
+      webdav_version: ${{ steps.check_versions.outputs.webdav_version }}
+      naive_version: ${{ steps.check_versions.outputs.naive_version }}
+      build_cf: ${{ steps.check_versions.outputs.build_cf }}
+      build_webdav: ${{ steps.check_versions.outputs.build_webdav }}
+      build_naive: ${{ steps.check_versions.outputs.build_naive }}
+      build_needed: ${{ steps.check_versions.outputs.build_needed }}
+      state_changed: ${{ steps.check_versions.outputs.state_changed }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check for new Caddy version
-        id: check_version
+      - name: Check Caddy and plugin versions
+        id: check_versions
         shell: bash
         run: |
+          read_tracked_version() {
+            if [ -f "$1" ]; then
+              tr -d '\r\n' < "$1"
+            else
+              printf ''
+            fi
+          }
+
+          get_github_commit() {
+            curl --fail --silent --show-error \
+              --retry 3 --retry-delay 2 --retry-all-errors \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              -H 'Authorization: Bearer ${{ github.token }}' \
+              "https://api.github.com/repos/$1/commits/$2" \
+              | jq -er '.sha'
+          }
+
           AVAILABLE_TAGS=$(curl --fail --silent --show-error \
+            --retry 3 --retry-delay 2 --retry-all-errors \
             'https://registry.hub.docker.com/v2/repositories/library/caddy/tags?page_size=100' \
             | jq -r '.results[].name')
-          MATCHING_TAG=$(echo "$AVAILABLE_TAGS" \
+          CADDY_VERSION=$(echo "$AVAILABLE_TAGS" \
             | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
             | sort -V \
             | tail -n 1)
 
-          if [ -z "$MATCHING_TAG" ]; then
+          if [ -z "$CADDY_VERSION" ]; then
             echo "No suitable Caddy tag found"
             exit 1
           fi
 
-          CURRENT_VERSION=""
-          if [ -f .caddy-version ]; then
-            CURRENT_VERSION=$(cat .caddy-version)
+          CLOUDFLARE_VERSION=$(get_github_commit 'caddy-dns/cloudflare' 'master')
+          WEBDAV_VERSION=$(get_github_commit 'mholt/caddy-webdav' 'master')
+          NAIVE_VERSION=$(get_github_commit 'klzgrad/forwardproxy' 'naive')
+
+          TRACKED_CADDY_VERSION=$(read_tracked_version '.caddy-version')
+          TRACKED_CLOUDFLARE_VERSION=$(read_tracked_version '.caddy-cloudflare-plugin-version')
+          TRACKED_WEBDAV_VERSION=$(read_tracked_version '.caddy-webdav-plugin-version')
+          TRACKED_NAIVE_VERSION=$(read_tracked_version '.caddy-naive-plugin-version')
+
+          CADDY_CHANGED=false
+          CLOUDFLARE_CHANGED=false
+          WEBDAV_CHANGED=false
+          NAIVE_CHANGED=false
+
+          if [ "$CADDY_VERSION" != "$TRACKED_CADDY_VERSION" ]; then
+            CADDY_CHANGED=true
+          fi
+          if [ "$CLOUDFLARE_VERSION" != "$TRACKED_CLOUDFLARE_VERSION" ]; then
+            CLOUDFLARE_CHANGED=true
+          fi
+          if [ "$WEBDAV_VERSION" != "$TRACKED_WEBDAV_VERSION" ]; then
+            WEBDAV_CHANGED=true
+          fi
+          if [ "$NAIVE_VERSION" != "$TRACKED_NAIVE_VERSION" ]; then
+            NAIVE_CHANGED=true
           fi
 
-          VERSION_CHANGED=false
-          if [ "$MATCHING_TAG" != "$CURRENT_VERSION" ]; then
-            VERSION_CHANGED=true
+          BUILD_CF=false
+          BUILD_WEBDAV=false
+          BUILD_NAIVE=false
+
+          if [ "${{ github.event_name }}" != "schedule" ] || [ "$CADDY_CHANGED" = true ]; then
+            BUILD_CF=true
+            BUILD_WEBDAV=true
+            BUILD_NAIVE=true
+          else
+            if [ "$CLOUDFLARE_CHANGED" = true ]; then
+              BUILD_CF=true
+              BUILD_WEBDAV=true
+            fi
+            if [ "$WEBDAV_CHANGED" = true ]; then
+              BUILD_WEBDAV=true
+            fi
+            if [ "$NAIVE_CHANGED" = true ]; then
+              BUILD_NAIVE=true
+            fi
           fi
 
-          BUILD_NEEDED=true
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            BUILD_NEEDED=$VERSION_CHANGED
+          BUILD_NEEDED=false
+          if [ "$BUILD_CF" = true ] || [ "$BUILD_WEBDAV" = true ] || [ "$BUILD_NAIVE" = true ]; then
+            BUILD_NEEDED=true
           fi
 
-          echo "Latest Caddy version: $MATCHING_TAG"
-          echo "Tracked Caddy version: ${CURRENT_VERSION:-none}"
+          STATE_CHANGED=false
+          if [ "$CADDY_CHANGED" = true ] \
+            || [ "$CLOUDFLARE_CHANGED" = true ] \
+            || [ "$WEBDAV_CHANGED" = true ] \
+            || [ "$NAIVE_CHANGED" = true ]; then
+            STATE_CHANGED=true
+          fi
+
+          echo "Caddy: ${TRACKED_CADDY_VERSION:-none} -> $CADDY_VERSION (changed: $CADDY_CHANGED)"
+          echo "Cloudflare: ${TRACKED_CLOUDFLARE_VERSION:-none} -> $CLOUDFLARE_VERSION (changed: $CLOUDFLARE_CHANGED)"
+          echo "WebDAV: ${TRACKED_WEBDAV_VERSION:-none} -> $WEBDAV_VERSION (changed: $WEBDAV_CHANGED)"
+          echo "Naive: ${TRACKED_NAIVE_VERSION:-none} -> $NAIVE_VERSION (changed: $NAIVE_CHANGED)"
+          echo "Selected images: cf=$BUILD_CF webdav=$BUILD_WEBDAV naive=$BUILD_NAIVE"
           echo "Build needed: $BUILD_NEEDED"
-          echo "caddy_version=$MATCHING_TAG" >> "$GITHUB_OUTPUT"
+
+          echo "caddy_version=$CADDY_VERSION" >> "$GITHUB_OUTPUT"
+          echo "cloudflare_version=$CLOUDFLARE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "webdav_version=$WEBDAV_VERSION" >> "$GITHUB_OUTPUT"
+          echo "naive_version=$NAIVE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_cf=$BUILD_CF" >> "$GITHUB_OUTPUT"
+          echo "build_webdav=$BUILD_WEBDAV" >> "$GITHUB_OUTPUT"
+          echo "build_naive=$BUILD_NAIVE" >> "$GITHUB_OUTPUT"
           echo "build_needed=$BUILD_NEEDED" >> "$GITHUB_OUTPUT"
-          echo "version_changed=$VERSION_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "state_changed=$STATE_CHANGED" >> "$GITHUB_OUTPUT"
 
   build_images:
-    needs: check_version
-    if: needs.check_version.outputs.build_needed == 'true'
+    name: Build ${{ matrix.image }}
+    needs: check_versions
+    if: needs.check_versions.outputs.build_needed == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
           - image: caddy-cf
-            modules: --with github.com/caddy-dns/cloudflare
+            enabled: ${{ needs.check_versions.outputs.build_cf }}
+            modules: --with github.com/caddy-dns/cloudflare@${{ needs.check_versions.outputs.cloudflare_version }}
           - image: caddy-webdav
-            modules: --with github.com/caddy-dns/cloudflare --with github.com/mholt/caddy-webdav
+            enabled: ${{ needs.check_versions.outputs.build_webdav }}
+            modules: --with github.com/caddy-dns/cloudflare@${{ needs.check_versions.outputs.cloudflare_version }} --with github.com/mholt/caddy-webdav@${{ needs.check_versions.outputs.webdav_version }}
           - image: caddy-naive
-            modules: --with github.com/caddyserver/forwardproxy=github.com/klzgrad/forwardproxy@naive
+            enabled: ${{ needs.check_versions.outputs.build_naive }}
+            modules: --with github.com/caddyserver/forwardproxy=github.com/klzgrad/forwardproxy@${{ needs.check_versions.outputs.naive_version }}
     steps:
       - name: Checkout code
+        if: matrix.enabled == 'true'
         uses: actions/checkout@v4
 
       - name: Set up QEMU
+        if: matrix.enabled == 'true'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
+        if: matrix.enabled == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
+        if: matrix.enabled == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push ${{ matrix.image }}
+        if: matrix.enabled == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./caddy
           file: ./caddy/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ needs.check_version.outputs.caddy_version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ needs.check_versions.outputs.caddy_version }}
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:latest
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           build-args: |
-            CADDY_VERSION=${{ needs.check_version.outputs.caddy_version }}
+            CADDY_VERSION=${{ needs.check_versions.outputs.caddy_version }}
             CADDY_MODULES=${{ matrix.modules }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
-  update_version:
+  update_versions:
     needs:
-      - check_version
+      - check_versions
       - build_images
-    if: needs.check_version.outputs.version_changed == 'true' && needs.build_images.result == 'success'
+    if: needs.check_versions.outputs.state_changed == 'true' && needs.build_images.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -126,19 +216,26 @@ jobs:
           ref: master
           fetch-depth: 0
 
-      - name: Update tracked Caddy version
+      - name: Update tracked Caddy and plugin versions
         shell: bash
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git pull --ff-only origin master
-          echo "${{ needs.check_version.outputs.caddy_version }}" > .caddy-version
-          git add .caddy-version
+          echo "${{ needs.check_versions.outputs.caddy_version }}" > .caddy-version
+          echo "${{ needs.check_versions.outputs.cloudflare_version }}" > .caddy-cloudflare-plugin-version
+          echo "${{ needs.check_versions.outputs.webdav_version }}" > .caddy-webdav-plugin-version
+          echo "${{ needs.check_versions.outputs.naive_version }}" > .caddy-naive-plugin-version
+          git add \
+            .caddy-version \
+            .caddy-cloudflare-plugin-version \
+            .caddy-webdav-plugin-version \
+            .caddy-naive-plugin-version
 
           if git diff --cached --quiet; then
-            echo "Caddy version is already up to date"
+            echo "Caddy and plugin versions are already up to date"
             exit 0
           fi
 
-          git commit -m "更新 Caddy 版本至 ${{ needs.check_version.outputs.caddy_version }}"
+          git commit -m "更新 Caddy 及插件版本记录"
           git push origin master
