@@ -12,7 +12,7 @@
   encode
 
   forward_proxy {
-    basic_auth {env.NAIVE_USERNAME} {env.NAIVE_PASSWORD}
+    basic_auth {$NAIVE_USERNAME} {$NAIVE_PASSWORD}
     hide_ip
     hide_via
     probe_resistance
