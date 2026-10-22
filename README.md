@@ -4,6 +4,7 @@
 
 ## 支持的镜像
 
+- [PHPCMS PHP](./php/phpcms): 保留旧部署标签的 PHP 7.4 安全回补镜像
 - [Nextcloud](./nextcloud): 私有云存储解决方案
 - [CoreDNS](./coredns): 灵活可扩展的 DNS 服务器
 - [FRP](./frp)（服务器端和客户端）: 快速反向代理
@@ -48,6 +49,7 @@
 要使用这些镜像，您可以从 Docker Hub 拉取：
 
 ```
+docker pull liuweitao/php:7.4.30-phpcms
 docker pull liuweitao/nextcloud:latest
 docker pull liuweitao/coredns:latest
 docker pull liuweitao/frps:latest

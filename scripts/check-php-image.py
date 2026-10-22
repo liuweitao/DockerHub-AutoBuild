@@ -20,17 +20,20 @@ def validate(payload, profile, sapi):
     assert data['upload_progress'] in ('', '0'), data
     required = {
         'php74': {'PDO', 'pdo_mysql', 'bcmath', 'gd', 'redis', 'mongodb', 'openssl'},
+        'phpcms': {'mysqli', 'gd', 'openssl'},
         'php8': {'PDO', 'pdo_mysql', 'imap', 'redis', 'openssl'},
         'nextcloud': {'bz2', 'gd', 'intl', 'pdo_mysql', 'zip'},
     }[profile]
     assert required <= set(data['extensions']), (required - set(data['extensions']))
     version = tuple(int(part) for part in data['version'].split('.'))
-    if profile == 'php74':
+    if profile in ('php74', 'phpcms'):
         assert version == (7, 4, 33), version
     else:
         minimum = {(8, 2): (8, 2, 35), (8, 3): (8, 3, 36),
                    (8, 4): (8, 4, 27), (8, 5): (8, 5, 12)}
         assert version[:2] in minimum and version >= minimum[version[:2]], version
+    if profile == 'phpcms' and sapi == 'fpm-fcgi':
+        assert data['uid'] == 1000 and data['gid'] == 1000, data
     return data
 
 
@@ -76,7 +79,7 @@ def main():
     mount = f'{fixtures}:/var/www/html:ro'
     cli = docker('run', '--rm', '--entrypoint', 'php', '-v', mount, image, '/var/www/html/health.php')
     print('CLI:', validate(cli.stdout, profile, 'cli'))
-    if profile == 'php74':
+    if profile in ('php74', 'phpcms'):
         # The official 7.4 backport must exit immediately on OOM. The old engine
         # instead unwinds through request shutdown and invokes this callback.
         oom = docker('run', '--rm', '--entrypoint', 'php', image,
@@ -93,7 +96,8 @@ def main():
         assert oom.returncode != 0, 'Memory limit no longer enforced'
         assert 'memory' in (oom.stdout + oom.stderr).lower(), oom.stderr
     if profile != 'nextcloud':
-        docker('run', '--rm', '--entrypoint', 'composer', image, '--version')
+        if profile != 'phpcms':
+            docker('run', '--rm', '--entrypoint', 'composer', image, '--version')
         docker('run', '--rm', '--entrypoint', 'php-fpm', image, '-t')
     port = 80 if profile == 'nextcloud' else 9000
     entrypoint = 'apache2-foreground' if profile == 'nextcloud' else 'php-fpm'

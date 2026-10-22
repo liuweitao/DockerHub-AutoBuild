@@ -5,6 +5,8 @@ on:
     branches: [master]
     paths:
       - 'laravel/php7.4/**'
+      - 'php/common/**'
+      - '.dockerignore'
       - 'scripts/check-php-image.py'
       - 'tests/php/**'
       - '.github/workflows/build-laravel-php74-docker.yml'
@@ -35,7 +37,8 @@ jobs:
       - name: Build fresh image for validation
         uses: docker/build-push-action@v7
         with:
-          context: ./laravel/php7.4
+          context: .
+          file: ./laravel/php7.4/Dockerfile
           pull: true
           no-cache: true
           load: true
