@@ -17,9 +17,14 @@ RUN set -eux; \
     sh /tmp/rebuild-php74.sh; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \
     docker-php-ext-install -j"$(nproc)" pdo_mysql bcmath gd; \
-    pecl install redis-6.3.0; \
-    pecl install mongodb-1.20.1; \
+    curl -fL --retry 3 --connect-timeout 15 -o /tmp/redis.tgz https://pecl.php.net/get/redis-6.3.0.tgz; \
+    echo '0d5141f634bd1db6c1ddcda053d25ecf2c4fc1c395430d534fd3f8d51dd7f0b5  /tmp/redis.tgz' | sha256sum -c -; \
+    pecl install /tmp/redis.tgz; \
+    curl -fL --retry 3 --connect-timeout 15 -o /tmp/mongodb.tgz https://pecl.php.net/get/mongodb-1.20.1.tgz; \
+    echo '614e57594918feb621f525e6516d59ce09b78f5172355ba8afb6c2207c1ce900  /tmp/mongodb.tgz' | sha256sum -c -; \
+    pecl install /tmp/mongodb.tgz; \
     docker-php-ext-enable redis mongodb; \
+    rm -f /tmp/redis.tgz /tmp/mongodb.tgz; \
     sh /tmp/cleanup-php74.sh
 
 RUN set -eux; \
