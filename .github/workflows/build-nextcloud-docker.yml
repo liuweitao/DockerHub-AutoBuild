@@ -1,100 +1,88 @@
 name: Build Nextcloud Docker Image
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - 'nextcloud/**'
+      - 'scripts/check-php-image.py'
+      - 'tests/php/**'
+      - '.github/workflows/build-nextcloud-docker.yml'
+  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'  # 每天运行一次
-  workflow_dispatch:  # 允许手动触发
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: php-security-nextcloud-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  check-and-build:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write  # 添加写入权限
+    timeout-minutes: 60
+    env:
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/nextcloud
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0  # 获取所有历史记录，以便进行推送
+          fetch-depth: 0
 
-      - name: Fetch latest changes and update local repository
+      - name: Select latest stable Nextcloud tag
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git fetch origin master
-          git reset --hard origin/master
+          set -euo pipefail
+          version=$(curl --fail --silent --show-error --retry 3 \
+            'https://hub.docker.com/v2/repositories/library/nextcloud/tags?page_size=100' \
+            | jq -er '.results[].name' \
+            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V | tail -n1)
+          test -n "$version"
+          echo "NEXTCLOUD_VERSION=$version" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Login to DockerHub
+      - name: Build fresh image for validation
+        uses: docker/build-push-action@v7
+        with:
+          context: ./nextcloud
+          pull: true
+          no-cache: true
+          load: true
+          push: false
+          tags: local/php-security-check:nextcloud
+          build-args: |
+            NEXTCLOUD_VERSION=${{ env.NEXTCLOUD_VERSION }}
+
+      - name: Verify security settings, extensions and web workers
+        run: python3 scripts/check-php-image.py local/php-security-check:nextcloud nextcloud
+
+      - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Check for new Nextcloud version and available Docker tags
-        id: check-version
+      - name: Publish validated image
         run: |
-          # 获取最新版本号
-          #LATEST_VERSION=$(curl -s https://api.github.com/repos/nextcloud/server/releases/latest | grep 'tag_name' | cut -d\" -f4 | sed 's/v//')
-          #echo "Latest Nextcloud version: $LATEST_VERSION"
-          
-          # 验证版本号格式
-          #if ! [[ $LATEST_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          #  echo "Error: Invalid version format: $LATEST_VERSION"
-          #  exit 1
-          #fi
-          
-          # 获取可用的 Docker 标签
-          AVAILABLE_TAGS=$(curl -s https://registry.hub.docker.com/v2/repositories/library/nextcloud/tags?page_size=100 | jq -r '.results[].name')
-          echo "Available Docker tags:"
-          echo "$AVAILABLE_TAGS"
-          
-          # 查找匹配的标签，只使用纯数字版本
-          MATCHING_TAG=$(echo "$AVAILABLE_TAGS" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | sort -V | tail -n 1)
-          
-          if [ -z "$MATCHING_TAG" ]; then
-          #  echo "No suitable tag found for version $LATEST_VERSION"
-            exit 1
-          fi
-          
-          echo "NEXTCLOUD_VERSION=$MATCHING_TAG" >> $GITHUB_ENV
-          echo "Found matching tag: $MATCHING_TAG"
-          
-          if [ -f .nextcloud-version ]; then
-            CURRENT_VERSION=$(cat .nextcloud-version)
-          else
-            CURRENT_VERSION=""
-          fi
-          
-          if [ "$MATCHING_TAG" != "$CURRENT_VERSION" ]; then
-            echo "New version detected"
-            echo "BUILD_NEEDED=true" >> $GITHUB_ENV
-          else
-            echo "No new version"
-            echo "BUILD_NEEDED=false" >> $GITHUB_ENV
-          fi
+          set -euo pipefail
+          docker tag local/php-security-check:nextcloud "$IMAGE:${NEXTCLOUD_VERSION}"
+          docker push "$IMAGE:${NEXTCLOUD_VERSION}"
+          docker tag local/php-security-check:nextcloud "$IMAGE:latest"
+          docker push "$IMAGE:latest"
 
-      - name: Build and push Docker image
-        if: env.BUILD_NEEDED == 'true'
-        uses: docker/build-push-action@v7
-        with:
-          context: ./nextcloud  # 更新构建上下文到 nextcloud 目录
-          file: ./nextcloud/Dockerfile  # 指定 Dockerfile 的路径
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/nextcloud:${{ env.NEXTCLOUD_VERSION }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nextcloud:latest
-          build-args: |
-            NEXTCLOUD_VERSION=${{ env.NEXTCLOUD_VERSION }}
-
-      - name: Update version file
-        if: env.BUILD_NEEDED == 'true'
-        run: echo ${{ env.NEXTCLOUD_VERSION }} > .nextcloud-version
-
-      - name: Commit and push if version changed
-        if: env.BUILD_NEEDED == 'true'
+      - name: Record published version
         run: |
-          git add .nextcloud-version
-          git commit -m "Update Nextcloud version to ${{ env.NEXTCLOUD_VERSION }}"
-          git push origin master
+          set -euo pipefail
+          printf '%s\n' "$NEXTCLOUD_VERSION" > .nextcloud-version
+          if ! git diff --quiet -- .nextcloud-version; then
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
+            git add .nextcloud-version
+            git commit -m "Update Nextcloud version to $NEXTCLOUD_VERSION"
+            git pull --rebase origin master
+            git push origin HEAD:master
+          fi

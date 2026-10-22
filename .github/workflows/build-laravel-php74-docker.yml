@@ -1,35 +1,61 @@
 name: Build Laravel PHP 7.4 Docker Image
 
 on:
-  workflow_dispatch:  # 只允许手动触发
+  push:
+    branches: [master]
+    paths:
+      - 'laravel/php7.4/**'
+      - 'scripts/check-php-image.py'
+      - 'tests/php/**'
+      - '.github/workflows/build-laravel-php74-docker.yml'
+  workflow_dispatch:
 
-env:
-  UID: 1000
-  GID: 1000
+permissions:
+  contents: read
+
+concurrency:
+  group: php-security-php74-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Login to DockerHub
+      - name: Build fresh image for validation
+        uses: docker/build-push-action@v7
+        with:
+          context: ./laravel/php7.4
+          pull: true
+          no-cache: true
+          load: true
+          push: false
+          tags: local/php-security-check:php74
+          build-args: |
+            UID=1000
+            GID=1000
+
+      - name: Verify security settings, extensions and web workers
+        run: python3 scripts/check-php-image.py local/php-security-check:php74 php74
+
+      - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v7
-        with:
-          context: ./laravel/php7.4
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:7.4
-          build-args: |
-            UID=${{ env.UID }}
-            GID=${{ env.GID }}
+      - name: Publish validated image
+        run: |
+          set -euo pipefail
+          docker tag local/php-security-check:php74 "$IMAGE:7.4"
+          docker push "$IMAGE:7.4"

@@ -1,96 +1,90 @@
 name: Build Laravel PHP 8 Docker Image
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - 'laravel/php8/**'
+      - 'scripts/check-php-image.py'
+      - 'tests/php/**'
+      - '.github/workflows/build-laravel-php8-docker.yml'
+  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'  # 每天运行一次
-  workflow_dispatch:  # 允许手动触发
+    - cron: '0 0 * * *'
 
-env:
-  UID: 1000
-  GID: 1000
+permissions:
+  contents: write
+
+concurrency:
+  group: php-security-php8-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  check-and-build:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 60
+    env:
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Fetch latest changes and update local repository
+      - name: Select latest stable PHP 8 Alpine FPM tag
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git fetch origin master
-          git reset --hard origin/master
+          set -euo pipefail
+          version=$(curl --fail --silent --show-error --retry 3 \
+            'https://hub.docker.com/v2/repositories/library/php/tags?page_size=100&name=8.' \
+            | jq -er '.results[].name' \
+            | grep -E '^8\.[0-9]+\.[0-9]+-fpm-alpine[0-9]+\.[0-9]+$' \
+            | sort -V | tail -n1)
+          test -n "$version"
+          echo "PHP_VERSION=$version" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Login to DockerHub
+      - name: Build fresh image for validation
+        uses: docker/build-push-action@v7
+        with:
+          context: ./laravel/php8
+          pull: true
+          no-cache: true
+          load: true
+          push: false
+          tags: local/php-security-check:php8
+          build-args: |
+            UID=1000
+            GID=1000
+            PHP_VERSION=${{ env.PHP_VERSION }}
+
+      - name: Verify security settings, extensions and web workers
+        run: python3 scripts/check-php-image.py local/php-security-check:php8 php8
+
+      - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Check latest PHP 8 version
-        id: check_version
+      - name: Publish validated image
         run: |
-          LATEST_VERSION=$(curl -s "https://hub.docker.com/v2/repositories/library/php/tags?page_size=100&name=8-fpm-alpine" | jq -r '.results[].name' | grep -E '^8\.[0-9]+\.[0-9]+-fpm-alpine[0-9.]+$' | sort -V | tail -n1)
-          if [ -z "$LATEST_VERSION" ]; then
-            echo "Failed to fetch latest PHP 8 version"
-            exit 1
+          set -euo pipefail
+          docker tag local/php-security-check:php8 "$IMAGE:${PHP_VERSION}"
+          docker push "$IMAGE:${PHP_VERSION}"
+          docker tag local/php-security-check:php8 "$IMAGE:8"
+          docker push "$IMAGE:8"
+
+      - name: Record published version
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$PHP_VERSION" > .php8-version
+          if ! git diff --quiet -- .php8-version; then
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
+            git add .php8-version
+            git commit -m "Update Laravel PHP 8 version to $PHP_VERSION"
+            git pull --rebase origin master
+            git push origin HEAD:master
           fi
-          echo "Latest PHP 8 version: $LATEST_VERSION"
-          
-          if [ ! -f .php8-version ]; then
-            echo "No .php8-version file found, creating it with the latest version"
-            echo "$LATEST_VERSION" > .php8-version
-            echo "BUILD_NEEDED=true" >> $GITHUB_ENV
-            echo "PHP_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
-          else
-            CURRENT_VERSION=$(cat .php8-version)
-            if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
-              echo "New version found. Current: $CURRENT_VERSION, Latest: $LATEST_VERSION"
-              echo "BUILD_NEEDED=true" >> $GITHUB_ENV
-              echo "PHP_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
-            else
-              echo "Version is up to date. Current: $CURRENT_VERSION"
-              echo "BUILD_NEEDED=false" >> $GITHUB_ENV
-            fi
-          fi
-
-      - name: Debug environment variables
-        run: |
-          echo "BUILD_NEEDED: ${{ env.BUILD_NEEDED }}"
-          echo "PHP_VERSION: ${{ env.PHP_VERSION }}"
-          echo "UID: ${{ env.UID }}"
-          echo "GID: ${{ env.GID }}"
-
-      - name: Build and push Docker image
-        if: env.BUILD_NEEDED == 'true'
-        uses: docker/build-push-action@v7
-        with:
-          context: ./laravel/php8
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:${{ env.PHP_VERSION }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php:8
-          build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
-            UID=${{ env.UID }}
-            GID=${{ env.GID }}
-
-      - name: Update version file
-        if: env.BUILD_NEEDED == 'true'
-        run: echo ${{ env.PHP_VERSION }} > .php8-version
-
-      - name: Commit and push if version changed
-        if: env.BUILD_NEEDED == 'true'
-        run: |
-          git add .php8-version
-          git commit -m "Update PHP 8 version to ${{ env.PHP_VERSION }}"
-          git push origin master
