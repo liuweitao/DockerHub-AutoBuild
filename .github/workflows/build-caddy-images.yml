@@ -163,6 +163,7 @@ jobs:
             modules: --with github.com/caddy-dns/cloudflare@${{ needs.check_versions.outputs.cloudflare_version }} --with github.com/mholt/caddy-webdav@${{ needs.check_versions.outputs.webdav_version }}
           - image: caddy-naive
             enabled: ${{ needs.check_versions.outputs.build_naive }}
+            naive_version: ${{ needs.check_versions.outputs.naive_version }}
             modules: --with github.com/caddyserver/forwardproxy=github.com/klzgrad/forwardproxy@${{ needs.check_versions.outputs.naive_version }}
     steps:
       - name: Checkout code
@@ -198,6 +199,7 @@ jobs:
           build-args: |
             CADDY_VERSION=${{ needs.check_versions.outputs.caddy_version }}
             CADDY_MODULES=${{ matrix.modules }}
+            CADDY_NAIVE_VERSION=${{ matrix.naive_version }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 

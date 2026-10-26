@@ -1,8 +1,11 @@
 ARG CADDY_VERSION=latest
 FROM caddy:${CADDY_VERSION}-builder AS builder
 
+ARG CADDY_VERSION
 ARG CADDY_MODULES
-RUN xcaddy build ${CADDY_MODULES}
+ARG CADDY_NAIVE_VERSION
+COPY build-caddy.sh /usr/local/bin/build-caddy
+RUN sh /usr/local/bin/build-caddy ${CADDY_MODULES}
 
 FROM caddy:${CADDY_VERSION}
 
