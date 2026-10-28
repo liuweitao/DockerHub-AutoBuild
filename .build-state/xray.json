@@ -1,0 +1,17 @@
+{
+  "assets": {
+    "Xray-linux-64.zip": "0eec3ed4163c273d8c8bf821f7d219e257921cf584aa3fb970715e458e631978",
+    "Xray-linux-arm32-v7a.zip": "89978508fa2ebb4a1e661f2c6ed51d241c4091b3cd17f4c65fdf20baae7dedac",
+    "Xray-linux-arm64-v8a.zip": "d1304946c486d98e6b886e9b931eaaaebb23835b30e217638037b7f2721d4e9c"
+  },
+  "images": {
+    "alpine:latest": "alpine:latest@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a"
+  },
+  "records": {
+    ".xray-version": "26.10.21"
+  },
+  "target": "xray",
+  "versions": {
+    "main": "26.10.21"
+  }
+}
