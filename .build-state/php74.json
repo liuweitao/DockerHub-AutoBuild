@@ -1,0 +1,10 @@
+{
+  "assets": {},
+  "images": {
+    "composer:2.2": "composer:2.2@sha256:db5a72680c556826fdf498dc16e67b55c10da56928de06929cbc431b81271efb",
+    "php:7.4.33-fpm-alpine3.16": "php:7.4.33-fpm-alpine3.16@sha256:0aeb129a60daff2874c5c70fcd9d88cdf3015b4fb4cc7c3f1a32a21e84631036"
+  },
+  "records": {},
+  "target": "php74",
+  "versions": {}
+}
