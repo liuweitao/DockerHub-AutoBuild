@@ -1,6 +1,8 @@
 ARG PHP_VERSION=8.5.12-fpm-alpine3.24
-FROM composer:2 AS composer
-FROM php:${PHP_VERSION}
+ARG COMPOSER_IMAGE=composer:2
+ARG PHP_IMAGE=php:${PHP_VERSION}
+FROM ${COMPOSER_IMAGE} AS composer
+FROM ${PHP_IMAGE}
 
 LABEL org.opencontainers.image.authors="liuweitao"
 ARG UID=1000

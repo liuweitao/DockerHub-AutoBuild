@@ -5,86 +5,21 @@ on:
     branches: [master]
     paths:
       - 'laravel/php8/**'
-      - 'scripts/check-php-image.py'
-      - 'tests/php/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.dockerignore'
+      - '.github/workflows/build-images.yml'
       - '.github/workflows/build-laravel-php8-docker.yml'
-  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '41 0 * * *'  # UTC; stagger daily checks
+  workflow_dispatch:
 
 permissions:
   contents: write
 
-concurrency:
-  group: php-security-php8-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    env:
-      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-php
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Select latest stable PHP 8 Alpine FPM tag
-        run: |
-          set -euo pipefail
-          version=$(curl --fail --silent --show-error --retry 3 \
-            'https://hub.docker.com/v2/repositories/library/php/tags?page_size=100&name=8.' \
-            | jq -er '.results[].name' \
-            | grep -E '^8\.[0-9]+\.[0-9]+-fpm-alpine[0-9]+\.[0-9]+$' \
-            | sort -V | tail -n1)
-          test -n "$version"
-          echo "PHP_VERSION=$version" >> "$GITHUB_ENV"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build fresh image for validation
-        uses: docker/build-push-action@v7
-        with:
-          context: ./laravel/php8
-          pull: true
-          no-cache: true
-          load: true
-          push: false
-          tags: local/php-security-check:php8
-          build-args: |
-            UID=1000
-            GID=1000
-            PHP_VERSION=${{ env.PHP_VERSION }}
-
-      - name: Verify security settings, extensions and web workers
-        run: python3 scripts/check-php-image.py local/php-security-check:php8 php8
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Publish validated image
-        run: |
-          set -euo pipefail
-          docker tag local/php-security-check:php8 "$IMAGE:${PHP_VERSION}"
-          docker push "$IMAGE:${PHP_VERSION}"
-          docker tag local/php-security-check:php8 "$IMAGE:8"
-          docker push "$IMAGE:8"
-
-      - name: Record published version
-        run: |
-          set -euo pipefail
-          printf '%s\n' "$PHP_VERSION" > .php8-version
-          if ! git diff --quiet -- .php8-version; then
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git config user.name "github-actions[bot]"
-            git add .php8-version
-            git commit -m "Update Laravel PHP 8 version to $PHP_VERSION"
-            git pull --rebase origin master
-            git push origin HEAD:master
-          fi
+    uses: ./.github/workflows/build-images.yml
+    with:
+      target: php8
+    secrets: inherit

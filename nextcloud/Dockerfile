@@ -1,5 +1,6 @@
 ARG NEXTCLOUD_VERSION=35.0.2
-FROM nextcloud:${NEXTCLOUD_VERSION}
+ARG NEXTCLOUD_IMAGE=nextcloud:${NEXTCLOUD_VERSION}
+FROM ${NEXTCLOUD_IMAGE}
 
 LABEL org.opencontainers.image.authors="liuweitao"
 

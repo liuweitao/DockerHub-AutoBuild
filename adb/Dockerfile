@@ -1,4 +1,5 @@
-FROM alpine:latest
+ARG ALPINE_IMAGE=alpine:latest
+FROM ${ALPINE_IMAGE}
 
 RUN apk add --no-cache \
     android-tools \

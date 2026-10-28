@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
-FROM debian:bookworm-slim AS downloader
+ARG DEBIAN_IMAGE=debian:bookworm-slim
+FROM ${DEBIAN_IMAGE} AS downloader
 
 ARG TARGETARCH
 ARG TARGETVARIANT
@@ -32,7 +33,7 @@ RUN set -eux; \
       --directory /tmp/naiveproxy --strip-components 1; \
     test -x /tmp/naiveproxy/naive
 
-FROM debian:bookworm-slim
+FROM ${DEBIAN_IMAGE}
 
 ARG NAIVE_VERSION
 

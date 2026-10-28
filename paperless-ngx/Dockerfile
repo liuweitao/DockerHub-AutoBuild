@@ -1,5 +1,6 @@
 ARG PAPERLESS_VERSION=latest
-FROM ghcr.io/paperless-ngx/paperless-ngx:${PAPERLESS_VERSION}
+ARG PAPERLESS_IMAGE=ghcr.io/paperless-ngx/paperless-ngx:${PAPERLESS_VERSION}
+FROM ${PAPERLESS_IMAGE}
 
 LABEL org.opencontainers.image.authors="liuweitao"
 

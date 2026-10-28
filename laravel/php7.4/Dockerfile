@@ -1,5 +1,7 @@
-FROM composer:2.2 AS composer
-FROM php:7.4.33-fpm-alpine3.16
+ARG COMPOSER_IMAGE=composer:2.2
+ARG PHP_IMAGE=php:7.4.33-fpm-alpine3.16
+FROM ${COMPOSER_IMAGE} AS composer
+FROM ${PHP_IMAGE}
 
 LABEL org.opencontainers.image.authors="liuweitao" \
       org.opencontainers.image.php2shell-patch="712e60f9edfd03f0960fc4fc3c2c375f42b90aa2"

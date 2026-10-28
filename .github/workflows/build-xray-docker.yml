@@ -1,69 +1,31 @@
 name: Build Xray Docker
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - 'xray/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.dockerignore'
+      - '.github/workflows/build-images.yml'
+      - '.github/workflows/build-xray-docker.yml'
+  schedule:
+    - cron: '19 1 * * *'  # UTC; stagger daily checks
   workflow_dispatch:
     inputs:
       version:
-        description: 'Xray version'
-        required: true
+        description: '指定 Release 标签；留空跟进最新稳定版。指定版本仅发布版本标签。'
+        required: false
         type: string
-  schedule:
-    - cron: '0 0 * * 0'
 
-env:
-  REGISTRY: docker.io
-  IMAGE_NAME: liuweitao/xray
+permissions:
+  contents: write
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-
-      - name: Configure Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Get latest version
-        if: github.event_name == 'schedule'
-        run: |
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases/latest | jq -r .tag_name | sed 's/v//')
-          echo "VERSION=$LATEST_VERSION" >> $GITHUB_ENV
-
-      - name: Set manual version
-        if: github.event_name == 'workflow_dispatch'
-        run: echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v7
-        with:
-          context: xray
-          push: true
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
-          build-args: |
-            VERSION=${{ env.VERSION }}
-          tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ env.VERSION }} 
+    uses: ./.github/workflows/build-images.yml
+    with:
+      target: xray
+      version: ${{ inputs.version || '' }}
+    secrets: inherit

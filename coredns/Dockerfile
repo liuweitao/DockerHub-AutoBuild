@@ -1,13 +1,20 @@
-FROM alpine:latest AS builder
+ARG ALPINE_IMAGE=alpine:latest
+FROM ${ALPINE_IMAGE} AS builder
 
 ARG TARGETARCH
+ARG SHA256_AMD64
+ARG SHA256_ARM64
+ARG SHA256_ARMV7
 ARG VERSION
 
 RUN apk add --no-cache ca-certificates curl && \
-    curl -sSL https://github.com/coredns/coredns/releases/download/v${VERSION}/coredns_${VERSION}_linux_${TARGETARCH}.tgz | tar xz -C /tmp && \
+    curl -fSL --retry 3 --connect-timeout 15 https://github.com/coredns/coredns/releases/download/v${VERSION}/coredns_${VERSION}_linux_${TARGETARCH}.tgz -o /tmp/upstream-asset && \
+    case "$TARGETARCH" in amd64) EXPECTED="$SHA256_AMD64" ;; arm64) EXPECTED="$SHA256_ARM64" ;; arm) EXPECTED="$SHA256_ARMV7" ;; *) exit 1 ;; esac && \
+    if [ -n "$EXPECTED" ]; then echo "$EXPECTED  /tmp/upstream-asset" | sha256sum -c -; fi && \
+    tar xzf /tmp/upstream-asset -C /tmp && \
     mv /tmp/coredns /usr/local/bin/coredns
 
-FROM alpine:latest
+FROM ${ALPINE_IMAGE}
 
 LABEL org.opencontainers.image.authors="liuweitao"
 

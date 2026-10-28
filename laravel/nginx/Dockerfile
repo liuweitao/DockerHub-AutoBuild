@@ -1,5 +1,6 @@
 ARG NGINX_VERSION=stable-alpine
-FROM nginx:${NGINX_VERSION}
+ARG NGINX_IMAGE=nginx:${NGINX_VERSION}
+FROM ${NGINX_IMAGE}
 
 LABEL org.opencontainers.image.authors="liuweitao"
 

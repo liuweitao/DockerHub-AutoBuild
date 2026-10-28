@@ -1,12 +1,16 @@
-FROM alpine:latest AS builder
+ARG ALPINE_IMAGE=alpine:latest
+FROM ${ALPINE_IMAGE} AS builder
+
+ARG ENDLESSH_COMMIT
 
 # 安装必要的软件包并构建 Endlessh
 RUN apk add --no-cache build-base git && \
-    git clone https://github.com/skeeto/endlessh.git /endlessh && \
-    cd /endlessh && \
-    make
+    git init /endlessh && \
+    git -C /endlessh fetch --depth=1 https://github.com/skeeto/endlessh.git "${ENDLESSH_COMMIT:-master}" && \
+    git -C /endlessh checkout --detach FETCH_HEAD && \
+    make -C /endlessh
 
-FROM alpine:latest
+FROM ${ALPINE_IMAGE}
 
 LABEL org.opencontainers.image.authors="liuweitao"
 

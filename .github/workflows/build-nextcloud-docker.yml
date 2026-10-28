@@ -5,84 +5,21 @@ on:
     branches: [master]
     paths:
       - 'nextcloud/**'
-      - 'scripts/check-php-image.py'
-      - 'tests/php/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.dockerignore'
+      - '.github/workflows/build-images.yml'
       - '.github/workflows/build-nextcloud-docker.yml'
-  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '53 0 * * *'  # UTC; stagger daily checks
+  workflow_dispatch:
 
 permissions:
   contents: write
 
-concurrency:
-  group: php-security-nextcloud-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    env:
-      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/nextcloud
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Select latest stable Nextcloud tag
-        run: |
-          set -euo pipefail
-          version=$(curl --fail --silent --show-error --retry 3 \
-            'https://hub.docker.com/v2/repositories/library/nextcloud/tags?page_size=100' \
-            | jq -er '.results[].name' \
-            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
-            | sort -V | tail -n1)
-          test -n "$version"
-          echo "NEXTCLOUD_VERSION=$version" >> "$GITHUB_ENV"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build fresh image for validation
-        uses: docker/build-push-action@v7
-        with:
-          context: ./nextcloud
-          pull: true
-          no-cache: true
-          load: true
-          push: false
-          tags: local/php-security-check:nextcloud
-          build-args: |
-            NEXTCLOUD_VERSION=${{ env.NEXTCLOUD_VERSION }}
-
-      - name: Verify security settings, extensions and web workers
-        run: python3 scripts/check-php-image.py local/php-security-check:nextcloud nextcloud
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Publish validated image
-        run: |
-          set -euo pipefail
-          docker tag local/php-security-check:nextcloud "$IMAGE:${NEXTCLOUD_VERSION}"
-          docker push "$IMAGE:${NEXTCLOUD_VERSION}"
-          docker tag local/php-security-check:nextcloud "$IMAGE:latest"
-          docker push "$IMAGE:latest"
-
-      - name: Record published version
-        run: |
-          set -euo pipefail
-          printf '%s\n' "$NEXTCLOUD_VERSION" > .nextcloud-version
-          if ! git diff --quiet -- .nextcloud-version; then
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git config user.name "github-actions[bot]"
-            git add .nextcloud-version
-            git commit -m "Update Nextcloud version to $NEXTCLOUD_VERSION"
-            git pull --rebase origin master
-            git push origin HEAD:master
-          fi
+    uses: ./.github/workflows/build-images.yml
+    with:
+      target: nextcloud
+    secrets: inherit
