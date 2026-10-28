@@ -10,6 +10,7 @@
     ".caddy-version": "2.11.7",
     ".caddy-webdav-plugin-version": "fa2f366b0d75e54c2e381c0aefc3a8df8bf5794b"
   },
+  "source_digest": "sha256:caa2082ebbbed13ab302f5528cf5999184b30bdcb437b2f773c41af1a7ed11ea",
   "target": "caddy",
   "versions": {
     "cloudflare": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
