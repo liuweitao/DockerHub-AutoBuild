@@ -1,0 +1,16 @@
+{
+  "assets": {
+    "coredns_1.15.0_linux_amd64.tgz": "2495c5b8f3fab6d0a336c397f1227b75406d86e6ec7125744a29df9e936ab8cd",
+    "coredns_1.15.0_linux_arm64.tgz": "73a5bf107c9791d57741ccd59ad138ab00bcd5bb3f62e2e28c999f5c047334a4"
+  },
+  "images": {
+    "alpine:latest": "alpine:latest@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a"
+  },
+  "records": {
+    ".coredns-version": "1.15.0"
+  },
+  "target": "coredns",
+  "versions": {
+    "main": "1.15.0"
+  }
+}
