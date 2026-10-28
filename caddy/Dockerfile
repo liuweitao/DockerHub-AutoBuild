@@ -1,6 +1,7 @@
 ARG CADDY_VERSION=latest
 ARG CADDY_BUILDER_IMAGE=caddy:${CADDY_VERSION}-builder
 ARG CADDY_IMAGE=caddy:${CADDY_VERSION}
+# Run the Go compiler on the host CPU and cross-compile each target binary.
 FROM --platform=$BUILDPLATFORM ${CADDY_BUILDER_IMAGE} AS builder
 
 ARG CADDY_VERSION
