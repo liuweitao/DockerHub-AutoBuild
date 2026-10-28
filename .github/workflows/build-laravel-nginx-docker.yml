@@ -1,9 +1,23 @@
 name: Build Laravel Nginx Docker Image
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - 'laravel/nginx/**'
+      - 'scripts/check-nginx-version.py'
+      - 'tests/nginx/**'
+      - '.github/workflows/build-laravel-nginx-docker.yml'
   schedule:
     - cron: '0 0 * * *'  # 每天运行一次
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: laravel-nginx-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   UID: 1000
@@ -12,87 +26,81 @@ env:
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 30
+    env:
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-nginx
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Fetch latest changes and update local repository
+      - name: Test upstream update detection
+        run: python3 -m unittest discover -s tests/nginx -v
+
+      - name: Check latest Nginx stable Alpine image
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git fetch origin master
-          git reset --hard origin/master
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 3 \
+            --connect-timeout 15 --max-time 60 \
+            'https://hub.docker.com/v2/repositories/library/nginx/tags?page_size=100&name=stable-alpine' \
+            -o "$RUNNER_TEMP/nginx-tags.json"
+          python3 scripts/check-nginx-version.py "$RUNNER_TEMP/nginx-tags.json"
 
       - name: Set up Docker Buildx
+        if: env.BUILD_NEEDED == 'true'
         uses: docker/setup-buildx-action@v4
 
-      - name: Login to DockerHub
+      - name: Build fresh image for validation
+        if: env.BUILD_NEEDED == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: ./laravel/nginx
+          pull: true
+          no-cache: true
+          load: true
+          push: false
+          tags: local/laravel-nginx:check
+          build-args: |
+            NGINX_VERSION=${{ env.NGINX_BASE_REF }}
+            UID=${{ env.UID }}
+            GID=${{ env.GID }}
+
+      - name: Verify Nginx configuration and Laravel user
+        if: env.BUILD_NEEDED == 'true'
+        run: |
+          set -euo pipefail
+          docker run --rm --add-host php:127.0.0.1 local/laravel-nginx:check nginx -t
+          docker run --rm --entrypoint sh local/laravel-nginx:check -ec \
+            'nginx -v; test "$(id -u laravel)" = 1000; test "$(id -g laravel)" = 1000'
+
+      - name: Login to Docker Hub
+        if: env.BUILD_NEEDED == 'true'
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Check latest Nginx version
-        id: check_version
+      - name: Publish validated image
+        if: env.BUILD_NEEDED == 'true'
         run: |
-          LATEST_VERSION=$(curl -s "https://hub.docker.com/v2/repositories/library/nginx/tags?page_size=100&name=stable-alpine" | jq -r '.results[].name' | grep -E '^stable-alpine[0-9.]+$' | sort -V | tail -n1)
-          if [ -z "$LATEST_VERSION" ]; then
-            echo "Failed to fetch latest Nginx stable-alpine version"
-            echo "API Response:"
-            curl -s "https://hub.docker.com/v2/repositories/library/nginx/tags?page_size=100&name=stable-alpine" | jq '.'
-            exit 1
+          set -euo pipefail
+          docker tag local/laravel-nginx:check "$IMAGE:$NGINX_VERSION"
+          docker push "$IMAGE:$NGINX_VERSION"
+          docker tag local/laravel-nginx:check "$IMAGE:latest"
+          docker push "$IMAGE:latest"
+
+      - name: Record published upstream version and digest
+        if: env.BUILD_NEEDED == 'true'
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$NGINX_VERSION" > .nginx-version
+          printf '%s\n' "$NGINX_DIGEST" > .nginx-digest
+          git add .nginx-version .nginx-digest
+          if ! git diff --cached --quiet; then
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
+            git commit -m "Update Nginx base image to $NGINX_VERSION@$NGINX_DIGEST"
+            git pull --rebase origin master
+            git push origin HEAD:master
           fi
-          echo "Latest Nginx version: $LATEST_VERSION"
-          
-          if [ ! -f .nginx-version ]; then
-            echo "No .nginx-version file found, creating it with the latest version"
-            echo "$LATEST_VERSION" > .nginx-version
-            echo "BUILD_NEEDED=true" >> $GITHUB_ENV
-            echo "NGINX_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
-          else
-            CURRENT_VERSION=$(cat .nginx-version)
-            if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
-              echo "New version found. Current: $CURRENT_VERSION, Latest: $LATEST_VERSION"
-              echo "BUILD_NEEDED=true" >> $GITHUB_ENV
-              echo "NGINX_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
-            else
-              echo "Version is up to date. Current: $CURRENT_VERSION"
-              echo "BUILD_NEEDED=false" >> $GITHUB_ENV
-            fi
-          fi
-
-      - name: Debug environment variables
-        run: |
-          echo "BUILD_NEEDED: ${{ env.BUILD_NEEDED }}"
-          echo "NGINX_VERSION: ${{ env.NGINX_VERSION }}"
-          echo "UID: ${{ env.UID }}"
-          echo "GID: ${{ env.GID }}"
-
-      - name: Build and push Docker image
-        if: env.BUILD_NEEDED == 'true'
-        uses: docker/build-push-action@v7
-        with:
-          context: ./laravel/nginx
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-nginx:${{ env.NGINX_VERSION }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/laravel-nginx:latest
-          build-args: |
-            NGINX_VERSION=${{ env.NGINX_VERSION }}
-            UID=${{ env.UID }}
-            GID=${{ env.GID }}
-
-      - name: Update version file
-        if: env.BUILD_NEEDED == 'true'
-        run: echo ${{ env.NGINX_VERSION }} > .nginx-version
-
-      - name: Commit and push if version changed
-        if: env.BUILD_NEEDED == 'true'
-        run: |
-          git add .nginx-version
-          git commit -m "Update Nginx version to ${{ env.NGINX_VERSION }}"
-          git push origin master
