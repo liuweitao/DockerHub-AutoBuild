@@ -7,6 +7,7 @@
     ".nginx-digest": "sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951",
     ".nginx-version": "stable-alpine3.24"
   },
+  "source_digest": "sha256:6d5369a3dd098aa34bb8deb9bdffdbdb9ea1bdd0feab38837567291bbb01c021",
   "target": "nginx",
   "versions": {
     "main": "stable-alpine3.24"
