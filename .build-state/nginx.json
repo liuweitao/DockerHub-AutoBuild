@@ -1,0 +1,14 @@
+{
+  "assets": {},
+  "images": {
+    "nginx:stable-alpine3.24": "nginx:stable-alpine3.24@sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951"
+  },
+  "records": {
+    ".nginx-digest": "sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951",
+    ".nginx-version": "stable-alpine3.24"
+  },
+  "target": "nginx",
+  "versions": {
+    "main": "stable-alpine3.24"
+  }
+}
