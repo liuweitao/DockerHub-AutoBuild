@@ -7,6 +7,7 @@
   "records": {
     ".php8-version": "8.5.12-fpm-alpine3.24"
   },
+  "source_digest": "sha256:4deafa2dc72eac295e015effad9ea66c10b4eaa895efec444b8df3ee175c050f",
   "target": "php8",
   "versions": {
     "main": "8.5.12-fpm-alpine3.24"
