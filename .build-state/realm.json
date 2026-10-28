@@ -1,0 +1,16 @@
+{
+  "assets": {
+    "realm-aarch64-unknown-linux-musl.tar.gz": "f4c0318dd86854da483dcb7645b4f39cae2cc3f91c688fef969d53220b949488",
+    "realm-x86_64-unknown-linux-musl.tar.gz": "b1cc335547bea8bb2a88178bef12ec7f2363e36200e7ea1d4e1e67627929bf65"
+  },
+  "images": {
+    "alpine:latest": "alpine:latest@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a"
+  },
+  "records": {
+    ".realm-version": "2.9.6"
+  },
+  "target": "realm",
+  "versions": {
+    "main": "2.9.6"
+  }
+}
