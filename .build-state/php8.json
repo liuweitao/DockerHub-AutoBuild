@@ -1,0 +1,14 @@
+{
+  "assets": {},
+  "images": {
+    "composer:2": "composer:2@sha256:b6dcd72ca98fa19d0e5b8476de179859704891fad06dd9e0b96833d4c430a5fc",
+    "php:8.5.12-fpm-alpine3.24": "php:8.5.12-fpm-alpine3.24@sha256:4c2818074ec49f6abe46620f3965e0cb75bc3a5f2b417edd1aacaba6f091c40e"
+  },
+  "records": {
+    ".php8-version": "8.5.12-fpm-alpine3.24"
+  },
+  "target": "php8",
+  "versions": {
+    "main": "8.5.12-fpm-alpine3.24"
+  }
+}
