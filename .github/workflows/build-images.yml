@@ -14,7 +14,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: autobuild-${{ inputs.target }}
+  # Keep native Caddy builds independent from older emulated builds.
+  group: autobuild-${{ inputs.target }}${{ inputs.target == 'caddy' && '-native' || '' }}
   cancel-in-progress: false
 
 jobs:
