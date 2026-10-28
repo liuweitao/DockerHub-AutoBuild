@@ -1,0 +1,20 @@
+{
+  "assets": {},
+  "images": {
+    "caddy:2.11.7": "caddy:2.11.7@sha256:5e5286cb37d44086d651a5363f05f43a692ce4d649d88fb1bd844579f45fa9e8",
+    "caddy:2.11.7-builder": "caddy:2.11.7-builder@sha256:bf6a7d38add2508b7d2e3e3f40cf2af399214f143c0fa3daa51f254e01f8d293"
+  },
+  "records": {
+    ".caddy-cloudflare-plugin-version": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
+    ".caddy-naive-plugin-version": "e747854e78743dba85c039b38ed185fb11d93667",
+    ".caddy-version": "2.11.7",
+    ".caddy-webdav-plugin-version": "fa2f366b0d75e54c2e381c0aefc3a8df8bf5794b"
+  },
+  "target": "caddy",
+  "versions": {
+    "cloudflare": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
+    "main": "2.11.7",
+    "naive": "e747854e78743dba85c039b38ed185fb11d93667",
+    "webdav": "fa2f366b0d75e54c2e381c0aefc3a8df8bf5794b"
+  }
+}
