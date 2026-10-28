@@ -2,6 +2,7 @@
 """Exercise the PHP binary and the actual FPM/Apache worker before publishing."""
 import json
 import pathlib
+import re
 import socket
 import struct
 import subprocess
@@ -12,6 +13,33 @@ import urllib.request
 
 def docker(*args, check=True):
     return subprocess.run(['docker', *args], check=check, text=True, capture_output=True)
+
+
+def is_supported_php8(value):
+    """Keep known security floors and admit later stable PHP 8 minor branches."""
+    if not isinstance(value, str) or not re.fullmatch(r'8\.[0-9]+\.[0-9]+', value):
+        return False
+    version = tuple(map(int, value.split('.')))
+    minimum = {(8, 2): (8, 2, 35), (8, 3): (8, 3, 36),
+               (8, 4): (8, 4, 27), (8, 5): (8, 5, 12)}
+    floor = minimum.get(version[:2])
+    return version >= floor if floor else version >= (8, 6, 0)
+
+
+def check_build_version_guard(image, profile, cases_path):
+    """Run the actual Dockerfile guard against the shared policy test cases."""
+    root = pathlib.Path(__file__).resolve().parent.parent
+    dockerfile = root / ('laravel/php8/Dockerfile' if profile == 'php8' else 'nextcloud/Dockerfile')
+    guards = [line[len("RUN php -r '"):-1] for line in dockerfile.read_text().splitlines()
+              if line.startswith("RUN php -r '") and line.endswith("'")]
+    assert len(guards) == 1, 'Expected one PHP base version guard'
+    guard = guards[0]
+    assert guard.count('$version = PHP_VERSION;') == 1
+    for case in json.loads(cases_path.read_text()):
+        code = guard.replace('$version = PHP_VERSION;', '$version = ' + json.dumps(case['version']) + ';')
+        result = docker('run', '--rm', '--entrypoint', 'php', image, '-r', code, check=False)
+        assert (result.returncode == 0) == case['allowed'], (case, result.stderr)
+    print('PHP build-time version guard regression checks passed')
 
 
 def validate(payload, profile, sapi):
@@ -25,13 +53,11 @@ def validate(payload, profile, sapi):
         'nextcloud': {'bz2', 'gd', 'intl', 'pdo_mysql', 'zip'},
     }[profile]
     assert required <= set(data['extensions']), (required - set(data['extensions']))
-    version = tuple(int(part) for part in data['version'].split('.'))
+    version = data['version']
     if profile in ('php74', 'phpcms'):
-        assert version == (7, 4, 33), version
+        assert version == '7.4.33', version
     else:
-        minimum = {(8, 2): (8, 2, 35), (8, 3): (8, 3, 36),
-                   (8, 4): (8, 4, 27), (8, 5): (8, 5, 12)}
-        assert version[:2] in minimum and version >= minimum[version[:2]], version
+        assert is_supported_php8(version), version
     if profile == 'phpcms' and sapi == 'fpm-fcgi':
         assert data['uid'] == 1000 and data['gid'] == 1000, data
     return data
@@ -76,6 +102,8 @@ def fcgi(port):
 def main():
     image, profile = sys.argv[1:]
     fixtures = pathlib.Path(__file__).resolve().parent.parent / 'tests/php'
+    if profile in ('php8', 'nextcloud'):
+        check_build_version_guard(image, profile, fixtures / 'version-policy.json')
     mount = f'{fixtures}:/var/www/html:ro'
     cli = docker('run', '--rm', '--entrypoint', 'php', '-v', mount, image, '/var/www/html/health.php')
     print('CLI:', validate(cli.stdout, profile, 'cli'))

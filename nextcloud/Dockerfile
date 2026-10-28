@@ -6,7 +6,8 @@ LABEL org.opencontainers.image.authors="liuweitao"
 
 # apt upgrade cannot update the /usr/local PHP supplied by the parent image.
 # Refuse to publish until Nextcloud has rebuilt its parent with patched PHP.
-RUN php -r '$minimum = ["8.2" => "8.2.35", "8.3" => "8.3.36", "8.4" => "8.4.27", "8.5" => "8.5.12"]; $branch = PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION; if (!isset($minimum[$branch]) || version_compare(PHP_VERSION, $minimum[$branch], "<")) { fwrite(STDERR, "Unpatched or unreviewed Nextcloud PHP base: " . PHP_VERSION . PHP_EOL); exit(1); }'
+# Later stable PHP 8 branches inherit the fixes; previews and other majors require review.
+RUN php -r '$minimum = ["8.2" => "8.2.35", "8.3" => "8.3.36", "8.4" => "8.4.27", "8.5" => "8.5.12"]; $version = PHP_VERSION; $branch = implode(".", array_slice(explode(".", $version), 0, 2)); if (!preg_match("/^8\\.[0-9]+\\.[0-9]+$/D", $version) || version_compare($version, $minimum[$branch] ?? "8.6.0", "<")) { fwrite(STDERR, "Unsupported or unpatched PHP base: " . $version . PHP_EOL); exit(1); }'
 
 RUN set -eux; \
     apt-get update; \

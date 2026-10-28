@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import time
 import urllib.error
 import urllib.parse
@@ -17,6 +18,38 @@ ACCEPT = ', '.join(['application/vnd.oci.image.index.v1+json',
                     'application/vnd.docker.distribution.manifest.list.v2+json',
                     'application/vnd.oci.image.manifest.v1+json',
                     'application/vnd.docker.distribution.manifest.v2+json'])
+WORKFLOW_FILES = {
+    'adb': 'build-adb-docker.yml', 'caddy': 'build-caddy-images.yml',
+    'coredns': 'build-coredns-docker.yml', 'endlessh': 'build-endlessh-docker.yml',
+    'frp': 'build-frp-docker.yml', 'nginx': 'build-laravel-nginx-docker.yml',
+    'php74': 'build-laravel-php74-docker.yml', 'php8': 'build-laravel-php8-docker.yml',
+    'naiveproxy': 'build-naiveproxy-docker.yml', 'nextcloud': 'build-nextcloud-docker.yml',
+    'paperless': 'build-paperless-ngx-docker.yml', 'phpcms': 'build-phpcms-docker.yml',
+    'realm': 'build-realm-docker.yml', 'xray': 'build-xray-docker.yml',
+}
+
+
+def source_digest(target, builds):
+    """Hash relevant committed file names, modes and contents, excluding build state.
+
+    Both resolve and build check out the event commit. Hash its Git tree instead
+    of HEAD itself so publication-only commits cannot cause a rebuild loop.
+    """
+    paths = {'.dockerignore', '.gitattributes', 'scripts', 'tests',
+             '.github/workflows/build-images.yml',
+             '.github/workflows/' + WORKFLOW_FILES[target]}
+    for build in builds:
+        paths.add(Path(build['file']).as_posix())
+        if Path(build['context']) == Path('.'):
+            # Legacy PHP builds use root context to COPY shared backport sources.
+            paths.update({Path(build['file']).parent.as_posix(), 'php/common'})
+        else:
+            paths.add(Path(build['context']).as_posix())
+    tree = subprocess.check_output(
+        ['git', 'ls-tree', '-rz', '--full-tree', 'HEAD', '--', *sorted(paths)])
+    if not tree:
+        raise ValueError('No committed build sources found')
+    return 'sha256:' + hashlib.sha256(b'build-sources-v1\0' + tree).hexdigest()
 
 
 def request(url, headers=None):
@@ -238,6 +271,7 @@ def resolve(target, requested=''):
         else:
             add(target, './' + target, tags, args, two if target in ('coredns', 'realm') else three)
     # State describes inputs only; never write it until every selected image publishes.
+    state['source_digest'] = source_digest(target, builds)
     return state, builds, publish_latest
 
 

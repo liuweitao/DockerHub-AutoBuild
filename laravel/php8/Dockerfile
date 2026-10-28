@@ -9,8 +9,8 @@ ARG UID=1000
 ARG GID=1000
 ENV UID=${UID} GID=${GID}
 
-# Fail closed when an overridden base tag still contains vulnerable PHP.
-RUN php -r '$minimum = ["8.2" => "8.2.35", "8.3" => "8.3.36", "8.4" => "8.4.27", "8.5" => "8.5.12"]; $branch = PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION; if (!isset($minimum[$branch]) || version_compare(PHP_VERSION, $minimum[$branch], "<")) { fwrite(STDERR, "Unpatched or unreviewed PHP base: " . PHP_VERSION . PHP_EOL); exit(1); }'
+# Keep known security floors; allow later stable PHP 8 branches, excluding previews.
+RUN php -r '$minimum = ["8.2" => "8.2.35", "8.3" => "8.3.36", "8.4" => "8.4.27", "8.5" => "8.5.12"]; $version = PHP_VERSION; $branch = implode(".", array_slice(explode(".", $version), 0, 2)); if (!preg_match("/^8\\.[0-9]+\\.[0-9]+$/D", $version) || version_compare($version, $minimum[$branch] ?? "8.6.0", "<")) { fwrite(STDERR, "Unsupported or unpatched PHP base: " . $version . PHP_EOL); exit(1); }'
 
 RUN set -eux; \
     apk upgrade --no-cache; \

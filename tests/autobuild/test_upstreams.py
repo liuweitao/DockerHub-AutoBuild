@@ -88,7 +88,8 @@ class SelectionTests(unittest.TestCase):
             old = Path.cwd()
             try:
                 os.chdir(folder)
-                with patch.object(upstream, 'pin_image', return_value='alpine:latest@' + DIGEST):
+                with patch.object(upstream, 'pin_image', return_value='alpine:latest@' + DIGEST), \
+                     patch.object(upstream, 'source_digest', return_value=DIGEST):
                     state, builds, _ = upstream.resolve('adb')
                 self.assertTrue(upstream.build_needed('adb', state, 'schedule'))
                 self.assertEqual(list(Path('.').iterdir()), [])

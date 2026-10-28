@@ -1,0 +1,22 @@
+[
+  {"version": "8.2.34", "allowed": false},
+  {"version": "8.2.35", "allowed": true},
+  {"version": "8.3.35", "allowed": false},
+  {"version": "8.3.36", "allowed": true},
+  {"version": "8.4.26", "allowed": false},
+  {"version": "8.4.27", "allowed": true},
+  {"version": "8.5.11", "allowed": false},
+  {"version": "8.5.12", "allowed": true},
+  {"version": "8.5.13", "allowed": true},
+  {"version": "8.6.0", "allowed": true},
+  {"version": "8.10.0", "allowed": true},
+  {"version": "7.4.33", "allowed": false},
+  {"version": "8.0.30", "allowed": false},
+  {"version": "8.1.99", "allowed": false},
+  {"version": "9.0.0", "allowed": false},
+  {"version": "8.6.0RC1", "allowed": false},
+  {"version": "8.6.0beta1", "allowed": false},
+  {"version": "8.6.0-dev", "allowed": false},
+  {"version": "8.6", "allowed": false},
+  {"version": "8.6.0\n", "allowed": false}
+]
