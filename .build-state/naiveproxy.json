@@ -1,0 +1,17 @@
+{
+  "assets": {
+    "naiveproxy-v154.0.8037.49-5-linux-arm.tar.xz": "3a331f94bee43e220bb6124a7419ca61defdd3ac92954ee1af3b0dcbb3d9cc17",
+    "naiveproxy-v154.0.8037.49-5-linux-arm64.tar.xz": "8f4d917fa39a5d8cf1c17fc12ffd99ba84c015b62b43461d09cc074ca4114d8d",
+    "naiveproxy-v154.0.8037.49-5-linux-x64.tar.xz": "80214dfea1767f6ecf63a3a79dc9f48b203460f51abc609357fff48dd5844c7d"
+  },
+  "images": {
+    "debian:bookworm-slim": "debian:bookworm-slim@sha256:99c0b25c46d0214d5a2091092e7908907dcaecd6a962cde0ac700acee222b6f3"
+  },
+  "records": {
+    ".naiveproxy-version": "v154.0.8037.49-5"
+  },
+  "target": "naiveproxy",
+  "versions": {
+    "main": "v154.0.8037.49-5"
+  }
+}
