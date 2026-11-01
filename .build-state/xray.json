@@ -1,18 +1,18 @@
 {
   "assets": {
-    "Xray-linux-64.zip": "8a5f3e6a1057e4bd0f8a7c57c9d91204b4be0b74222a6e210d070603101163c2",
-    "Xray-linux-arm32-v7a.zip": "263fa7325c63b3a7f7316405f561e7c790b44c1461992ea648007f0374e9bdf4",
-    "Xray-linux-arm64-v8a.zip": "afe01f19045b05237420328028ee1ee2e1edd2100eb41a8cbbf50e683b0a6e58"
+    "Xray-linux-64.zip": "e4bd9119f50ae7c41658b1abd0679ae06f98bd864a2907ff33f2f2cf7081b214",
+    "Xray-linux-arm32-v7a.zip": "2387f55239ee7799fd67d5382e79f589c1da07a97d993e86b058f2290b8e456b",
+    "Xray-linux-arm64-v8a.zip": "1811c8f1da0c3b6dc707ebaf1c8390e987ba39859a8f0a7aadd8526157f2ec8d"
   },
   "images": {
     "alpine:latest": "alpine:latest@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a"
   },
   "records": {
-    ".xray-version": "26.10.29"
+    ".xray-version": "26.10.31"
   },
   "source_digest": "sha256:a8c486cfa1e09ab7317a0751af089f20c3cddca24e5afa1065479d42f66e10df",
   "target": "xray",
   "versions": {
-    "main": "26.10.29"
+    "main": "26.10.31"
   }
 }
