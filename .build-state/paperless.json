@@ -1,14 +1,14 @@
 {
   "assets": {},
   "images": {
-    "ghcr.io/paperless-ngx/paperless-ngx:3.4.1": "ghcr.io/paperless-ngx/paperless-ngx:3.4.1@sha256:1a08d8dfc2b51a08de09652dd86ad4d0c611c362382f944533ad38b73125fbc4"
+    "ghcr.io/paperless-ngx/paperless-ngx:3.4.2": "ghcr.io/paperless-ngx/paperless-ngx:3.4.2@sha256:d704e84f88300eb6ab001ab15720a2330ff99169cf9f94d6b8fcc44b63a84c84"
   },
   "records": {
-    ".paperless-version": "3.4.1"
+    ".paperless-version": "3.4.2"
   },
   "source_digest": "sha256:8f813f83c3732af1efb5f7d74d12c094051f9f94b692f4eeda4aa0b76bc336fb",
   "target": "paperless",
   "versions": {
-    "main": "3.4.1"
+    "main": "3.4.2"
   }
 }
