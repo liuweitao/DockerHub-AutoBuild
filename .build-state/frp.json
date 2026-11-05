@@ -1,18 +1,18 @@
 {
   "assets": {
-    "frp_0.71.1_linux_amd64.tar.gz": "1d9875210972a5d1a62b2dc4c48df45ab0af05d3ca1b5e494a014428259df803",
-    "frp_0.71.1_linux_arm.tar.gz": "8eb6fe66a3b36db24ca0de44fb01e6742d0ff60e30f462c9662f41813bbf4376",
-    "frp_0.71.1_linux_arm64.tar.gz": "8edf590b0c396fa42f9c147121a76af83cfc2002b08f5aef0ea1008c43482019"
+    "frp_0.72.0_linux_amd64.tar.gz": "daf719b32ca2778770bb92955e231a07414d754378b9af328aa2642862479804",
+    "frp_0.72.0_linux_arm.tar.gz": "d0531b20c7fef4c7d2efb281931e62f0612bb7f0de62d200fa9020fd58d319ca",
+    "frp_0.72.0_linux_arm64.tar.gz": "02180b857480302fd934e9ddbd50fe2f73229f99062f88756abc6de9df5e95cf"
   },
   "images": {
     "alpine:latest": "alpine:latest@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a"
   },
   "records": {
-    ".frp-version": "0.71.1"
+    ".frp-version": "0.72.0"
   },
   "source_digest": "sha256:08d8a09ff568569bdeedb767ccbfcf9db4dbceaf6fda07267cf6a90e6a8b48eb",
   "target": "frp",
   "versions": {
-    "main": "0.71.1"
+    "main": "0.72.0"
   }
 }
