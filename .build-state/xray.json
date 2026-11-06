@@ -5,7 +5,7 @@
     "Xray-linux-arm64-v8a.zip": "1811c8f1da0c3b6dc707ebaf1c8390e987ba39859a8f0a7aadd8526157f2ec8d"
   },
   "images": {
-    "alpine:latest": "alpine:latest@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a"
+    "alpine:latest": "alpine:latest@sha256:3f4d6b32e26703c6082839234f43769d5046b3ac7c910033911d1e71d8cd630a"
   },
   "records": {
     ".xray-version": "26.10.31"
