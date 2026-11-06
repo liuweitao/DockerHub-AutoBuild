@@ -5,7 +5,7 @@
     "frp_0.72.0_linux_arm64.tar.gz": "02180b857480302fd934e9ddbd50fe2f73229f99062f88756abc6de9df5e95cf"
   },
   "images": {
-    "alpine:latest": "alpine:latest@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a"
+    "alpine:latest": "alpine:latest@sha256:3f4d6b32e26703c6082839234f43769d5046b3ac7c910033911d1e71d8cd630a"
   },
   "records": {
     ".frp-version": "0.72.0"
