@@ -21,11 +21,18 @@ git -C "$build_dir/forwardproxy" -c core.autocrlf=false checkout --detach FETCH_
 git -c core.autocrlf=false clone --depth=1 --branch "$CADDY_VERSION" \
     https://github.com/caddyserver/caddy.git "$build_dir/caddy"
 
-# Match https://github.com/klzgrad/forwardproxy/blob/naive/.github/workflows/build.yml.
-# Fail if a future core/plugin pair cannot apply these patches cleanly.
-git -C "$build_dir/caddy" apply \
-    "$build_dir/forwardproxy/caddy-sing-quic-bbrv1.patch" \
-    "$build_dir/forwardproxy/caddy-read-idle-timeout.patch"
+# Keep two context lines so unrelated new imports (Caddy 2.11.9's httpguts)
+# don't invalidate the pinned QUIC patch. Changed code must still match.
+git -C "$build_dir/caddy" apply -C2 \
+    "$build_dir/forwardproxy/caddy-sing-quic-bbrv1.patch"
+
+# Caddy 2.11.9 already includes this API and the corresponding server wiring.
+# Older cores still need the pinned upstream backport; patch failures stay fatal.
+if ! git -C "$build_dir/caddy" grep -q '^func IdleTimeoutsFromContext(' \
+    -- modules/caddyhttp/idletimeout.go; then
+    git -C "$build_dir/caddy" apply \
+        "$build_dir/forwardproxy/caddy-read-idle-timeout.patch"
+fi
 
 xcaddy build "$CADDY_VERSION" \
     --replace "github.com/caddyserver/caddy/v2=$build_dir/caddy" "$@"
