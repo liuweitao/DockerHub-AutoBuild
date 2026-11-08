@@ -38,6 +38,50 @@ class SelectionTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'No versioned tag'):
                 upstream.stable_tag('caddy', 'latest', r'\d+\.\d+\.\d+')
 
+    def test_caddy_alias_with_extra_architecture_pins_matching_version_index(self):
+        platforms = ('linux/amd64', 'linux/arm64', 'linux/arm/v7')
+        images = [{'os': 'linux', 'architecture': arch, 'variant': variant, 'digest': 'sha256:' + char * 64}
+                  for arch, variant, char in [('amd64', None, 'c'), ('arm64', 'v8', 'd'), ('arm', 'v7', 'e')]]
+        alias = {'digest': DIGEST, 'images': images + [
+            {'os': 'linux', 'architecture': 'riscv64', 'digest': OTHER}]}
+        versioned = {'name': '2.11.9', 'digest': OTHER, 'images': images}
+        first = {'results': [{'name': '2.11.10', 'digest': OTHER, 'images': []}],
+                 'next': 'https://hub.docker.com/v2/repositories/library/caddy/tags?page=2'}
+        with patch.object(upstream, 'pin_image', return_value='caddy:latest@' + DIGEST), \
+             patch.object(upstream, 'get_json', side_effect=[alias, first, {'results': [versioned]}]):
+            version, image = upstream.stable_tag('caddy', 'latest', r'\d+\.\d+\.\d+', platforms)
+        self.assertEqual(version, '2.11.9')
+        self.assertEqual(image, 'caddy:2.11.9@' + OTHER)
+
+    def test_caddy_platform_fallback_rejects_mismatches_missing_and_ambiguous_images(self):
+        images = [{'os': 'linux', 'architecture': 'amd64', 'digest': DIGEST},
+                  {'os': 'linux', 'architecture': 'arm64', 'variant': 'v8', 'digest': OTHER},
+                  {'os': 'linux', 'architecture': 'arm', 'variant': 'v7', 'digest': DIGEST}]
+        alternatives = [images[:-1], images[:-1] + [{**images[-1], 'digest': OTHER}],
+                        images[:-1] + [{**images[-1], 'variant': 'v6'}], images + [images[0]]]
+        for candidate in alternatives:
+            with self.subTest(candidate=candidate), \
+                 patch.object(upstream, 'pin_image', return_value='caddy:latest@' + DIGEST), \
+                 patch.object(upstream, 'get_json', side_effect=[
+                     {'digest': DIGEST, 'images': images},
+                     {'results': [{'name': '2.11.9', 'digest': OTHER, 'images': candidate}]}]):
+                with self.assertRaisesRegex(ValueError, 'No versioned tag'):
+                    upstream.stable_tag('caddy', 'latest', r'\d+\.\d+\.\d+',
+                                        ('linux/amd64', 'linux/arm64', 'linux/arm/v7'))
+
+    def test_caddy_platform_fallback_requires_complete_alias_metadata(self):
+        with patch.object(upstream, 'pin_image', return_value='caddy:latest@' + DIGEST), \
+             patch.object(upstream, 'get_json', side_effect=[{'digest': DIGEST}, {
+                 'results': [{'name': '2.11.9', 'digest': OTHER}]}]):
+            with self.assertRaisesRegex(ValueError, 'No versioned tag'):
+                upstream.stable_tag('caddy', 'latest', r'\d+\.\d+\.\d+', ('linux/amd64',))
+
+    def test_caddy_alias_changing_during_resolution_is_rejected(self):
+        with patch.object(upstream, 'pin_image', return_value='caddy:latest@' + DIGEST), \
+             patch.object(upstream, 'get_json', return_value={'digest': OTHER}):
+            with self.assertRaisesRegex(ValueError, 'changed during resolution'):
+                upstream.stable_tag('caddy', 'latest', r'\d+\.\d+\.\d+', ('linux/amd64',))
+
     def test_downgrades_are_rejected_and_numeric_upgrades_are_allowed(self):
         for old, new in [('8.5.12-fpm-alpine3.24', '8.3.36-fpm-alpine3.23'), ('26.10.21', '26.9.30')]:
             with self.subTest(old=old), self.assertRaisesRegex(ValueError, 'downgrade'):

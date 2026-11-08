@@ -96,21 +96,46 @@ def pin_image(image):
     return image + '@' + valid_digest(digest)
 
 
-def stable_tag(repository, alias, pattern):
+def platform_digests(tag, platforms):
+    """Require one immutable image for every platform the build will consume."""
+    digests = []
+    for platform in platforms:
+        os_name, arch, *variant = platform.split('/')
+        images = [image for image in tag.get('images', [])
+                  if image.get('os') == os_name and image.get('architecture') == arch
+                  and (not variant or image.get('variant') == variant[0])]
+        if len(images) != 1:
+            return None
+        digests.append(valid_digest(images[0].get('digest')))
+    return tuple(digests)
+
+
+def stable_tag(repository, alias, pattern, platforms=()):
     """The official moving alias selects the channel; pages only identify its version."""
     pinned = pin_image(f'{repository}:{alias}')
     digest = pinned.rsplit('@', 1)[1]
+    alias_platforms = None
+    if platforms:
+        metadata = get_json(f'https://hub.docker.com/v2/repositories/library/{repository}/tags/{alias}')
+        if metadata.get('digest') != digest:
+            raise ValueError(f'Official {repository}:{alias} changed during resolution; retry')
+        alias_platforms = platform_digests(metadata, platforms)
     url = f'https://hub.docker.com/v2/repositories/library/{repository}/tags?page_size=100'
     # Hub sorts by update time, not software version. Follow every required page.
     while url:
         if not url.startswith('https://hub.docker.com/v2/repositories/'):
             raise ValueError('Unexpected Docker Hub pagination URL')
         payload = get_json(url)
-        matches = [tag['name'] for tag in payload['results']
-                   if re.fullmatch(pattern, tag['name']) and tag.get('digest') == digest]
+        matches = [tag for tag in payload['results']
+                   if re.fullmatch(pattern, tag['name']) and
+                   (tag.get('digest') == digest or
+                    (alias_platforms is not None and platform_digests(tag, platforms) == alias_platforms))]
         if matches:
-            version = max(matches, key=version_key)
-            return version, f'{repository}:{version}@{digest}'
+            tag = max(matches, key=lambda tag: version_key(tag['name']))
+            version = tag['name']
+            # Alias indexes can include extra architectures. Pin the selected
+            # version's own index after verifying every platform we consume.
+            return version, f'{repository}:{version}@{valid_digest(tag.get("digest"))}'
         url = payload.get('next')
     raise ValueError(f'No versioned tag matches official {repository}:{alias}; retry after upstream publication')
 
@@ -183,7 +208,10 @@ def resolve(target, requested=''):
             'caddy': ('caddy', 'latest', r'\d+\.\d+\.\d+', '.caddy-version'),
         }[target]
         repository, alias, pattern, version_file = spec
-        version, base = stable_tag(repository, alias, pattern)
+        if target == 'caddy':
+            version, base = stable_tag(repository, alias, pattern, platforms=three.split(','))
+        else:
+            version, base = stable_tag(repository, alias, pattern)
         prevent_downgrade(version, read_version(version_file))
         state['versions']['main'] = version
         state['images'][repository + ':' + version] = base

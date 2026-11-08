@@ -35,7 +35,7 @@ GitHub 的定时调度可能延迟；每日检查不能保证在官方发布后�
 
 各入口工作流调用 `build-images.yml`，由 `scripts/resolve-upstream.py` 统一解析上游：
 
-- PHP 8、Nextcloud、Caddy、Nginx 先解析官方稳定版别名，再分页查找相同摘要的版本标签；自动任务拒绝低于已发布记录的版本。
+- PHP 8、Nextcloud、Caddy、Nginx 先解析官方稳定版别名，再分页查找相同摘要的版本标签；Caddy 也允许总 manifest 因架构集合不同而变化，但须确认 amd64、arm64、arm/v7 三个构建架构的摘要全部一致，并锁定版本标签自身的 manifest 摘要。自动任务拒绝低于已发布记录的版本。
 - CoreDNS、FRP、Realm、Xray、NaiveProxy 跟踪官方稳定 Release 和各架构附件 SHA256，下载时校验摘要。
 - Paperless-ngx 同时跟踪 Release 和 GHCR 镜像摘要；Caddy 同时跟踪插件提交及构建器、运行时镜像摘要；Endlessh 跟踪源码提交。
 - 所有基础镜像按解析到的 manifest 摘要锁定，并在构建时拉取、禁用旧层缓存。版本、附件或基础镜像摘要变化会触发重新构建。
