@@ -9,7 +9,7 @@
   "records": {
     ".coredns-version": "1.15.0"
   },
-  "source_digest": "sha256:bd0384c36b742dda753f57bffc680eb077c2f35296343aed068ed25d9bc41781",
+  "source_digest": "sha256:5e9b724809ef6a9b4dac6f8ad4782e32b810408e17a075810bf9ade3f9882bc7",
   "target": "coredns",
   "versions": {
     "main": "1.15.0"
