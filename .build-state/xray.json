@@ -10,7 +10,7 @@
   "records": {
     ".xray-version": "26.10.31"
   },
-  "source_digest": "sha256:a8c486cfa1e09ab7317a0751af089f20c3cddca24e5afa1065479d42f66e10df",
+  "source_digest": "sha256:e0144b90f71305336964cffeb744c8e405a3e83d6bcc7aa77364a95ded1e2ca5",
   "target": "xray",
   "versions": {
     "main": "26.10.31"
