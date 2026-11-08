@@ -26,6 +26,8 @@ class CaddyBuildTests(unittest.TestCase):
             original = 'first\nsecond\nthird\nold-quic\nfourth\nfifth\nsixth\n'
             source = core / 'server.go'
             source.write_text(original)
+            (http / 'reverseproxy.go').write_text('import "github.com/quic-go/quic-go/http3"\n')
+            (http / 'reverseproxy_test.go').write_text('import "github.com/quic-go/quic-go"\n')
             self.git(core, 'add', '.')
             self.git(core, 'commit', '-qm', 'core')
             source.write_text(original.replace('old-quic', 'patched-quic'))
@@ -55,6 +57,8 @@ import json, os, pathlib, sys
 core = pathlib.Path(next(arg.split('=', 1)[1] for arg in sys.argv if arg.startswith('github.com/caddyserver/caddy/v2=')))
 assert 'patched-quic' in (core / 'server.go').read_text()
 assert 'func IdleTimeoutsFromContext(' in (core / 'modules/caddyhttp/idletimeout.go').read_text()
+assert '"github.com/sagernet/quic-go/http3"' in (core / 'modules/caddyhttp/reverseproxy.go').read_text()
+assert '"github.com/sagernet/quic-go"' in (core / 'modules/caddyhttp/reverseproxy_test.go').read_text()
 pathlib.Path(os.environ['BUILD_CAPTURE']).write_text(json.dumps(sys.argv[1:]))
 ''')
             xcaddy.chmod(0o755)

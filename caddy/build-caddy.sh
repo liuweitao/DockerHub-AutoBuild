@@ -26,6 +26,19 @@ git -c core.autocrlf=false clone --depth=1 --branch "$CADDY_VERSION" \
 git -C "$build_dir/caddy" apply -C2 \
     "$build_dir/forwardproxy/caddy-sing-quic-bbrv1.patch"
 
+# Newer Caddy files can introduce more QUIC imports than the pinned patch knew
+# about. Keep all source and test imports on the same fork, including reverse
+# proxy error handling added in 2.11.9, rather than mixing incompatible types.
+(
+    cd "$build_dir/caddy"
+    git grep -l '"github.com/quic-go/quic-go' -- '*.go' |
+    while IFS= read -r source; do
+        sed 's#"github.com/quic-go/quic-go#"github.com/sagernet/quic-go#g' \
+            "$source" > "$source.naive-tmp"
+        mv "$source.naive-tmp" "$source"
+    done
+)
+
 # Caddy 2.11.9 already includes this API and the corresponding server wiring.
 # Older cores still need the pinned upstream backport; patch failures stay fatal.
 if ! git -C "$build_dir/caddy" grep -q '^func IdleTimeoutsFromContext(' \

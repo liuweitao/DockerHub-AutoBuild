@@ -35,7 +35,7 @@
 - `caddy-sing-quic-bbrv1.patch`：QUIC BBRv1 拥塞控制。
 - `caddy-read-idle-timeout.patch`：认证 CONNECT 隧道的空闲超时覆盖 API。
 
-后一个补丁提供 Caddy 2.11.7 尚未包含的 `caddyhttp.IdleTimeoutsFromContext`，是 forwardproxy `e747854e78743dba85c039b38ed185fb11d93667` 起的编译依赖。Caddy 2.11.9 已包含该 API，构建时检测到它就跳过此回补。QUIC 补丁使用两行上下文校验，以兼容新增的无关 import；实际修改的代码仍须匹配。补丁应用失败会终止构建，避免发布不兼容的组合。
+后一个补丁提供 Caddy 2.11.7 尚未包含的 `caddyhttp.IdleTimeoutsFromContext`，是 forwardproxy `e747854e78743dba85c039b38ed185fb11d93667` 起的编译依赖。Caddy 2.11.9 已包含该 API，构建时检测到它就跳过此回补。QUIC 补丁使用两行上下文校验，以兼容新增的无关 import；实际修改的代码仍须匹配。脚本还会将新增 Go 文件中的原版 QUIC import 统一到同一个 fork，避免反向代理等模块混用不兼容的 QUIC 类型和 qpack 依赖。补丁应用失败会终止构建，避免发布不兼容的组合。
 
 ## 本地构建
 
