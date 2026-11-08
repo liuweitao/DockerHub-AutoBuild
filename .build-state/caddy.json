@@ -1,20 +1,20 @@
 {
   "assets": {},
   "images": {
-    "caddy:2.11.7": "caddy:2.11.7@sha256:36c24ad91a7ff7bc4c87fe22bfa8df3c4b18da0773d73fc12ee2c52b98c0bb7e",
-    "caddy:2.11.7-builder": "caddy:2.11.7-builder@sha256:c4cd20eaa0b69112fd5d4f721ffc9671687e1d5d0b155c8620cf7546dbef94c0"
+    "caddy:2.11.9": "caddy:2.11.9@sha256:0c2243efcf437ab7f7a978f1027fcf0d4f9be8a75df27b1b3fbc5dbe0ffa8cf0",
+    "caddy:2.11.9-builder": "caddy:2.11.9-builder@sha256:3fddbec729442a56b942d4c9eaef1df80893dbf2cf5b86701bfae6aad1408eeb"
   },
   "records": {
     ".caddy-cloudflare-plugin-version": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
     ".caddy-naive-plugin-version": "e747854e78743dba85c039b38ed185fb11d93667",
-    ".caddy-version": "2.11.7",
+    ".caddy-version": "2.11.9",
     ".caddy-webdav-plugin-version": "fa2f366b0d75e54c2e381c0aefc3a8df8bf5794b"
   },
-  "source_digest": "sha256:caa2082ebbbed13ab302f5528cf5999184b30bdcb437b2f773c41af1a7ed11ea",
+  "source_digest": "sha256:542bba6a16ef1278ff897e843a188b921a26c02c7fa3d77ff31185d479869b31",
   "target": "caddy",
   "versions": {
     "cloudflare": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
-    "main": "2.11.7",
+    "main": "2.11.9",
     "naive": "e747854e78743dba85c039b38ed185fb11d93667",
     "webdav": "fa2f366b0d75e54c2e381c0aefc3a8df8bf5794b"
   }
