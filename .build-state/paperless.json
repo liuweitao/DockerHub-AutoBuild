@@ -6,7 +6,7 @@
   "records": {
     ".paperless-version": "3.4.2"
   },
-  "source_digest": "sha256:9bd5576ecbb8e564e2a01b69659c6f030e20f9900296555943241f34dd7b3811",
+  "source_digest": "sha256:c40b1ab62376c4528a3a5673ec31c1a6fed9a67f35715a9e6fe658463f7bed34",
   "target": "paperless",
   "versions": {
     "main": "3.4.2"
