@@ -4,7 +4,7 @@
     "coredns_1.15.0_linux_arm64.tgz": "73a5bf107c9791d57741ccd59ad138ab00bcd5bb3f62e2e28c999f5c047334a4"
   },
   "images": {
-    "alpine:latest": "alpine:latest@sha256:3f4d6b32e26703c6082839234f43769d5046b3ac7c910033911d1e71d8cd630a"
+    "alpine:latest": "alpine:latest@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf"
   },
   "records": {
     ".coredns-version": "1.15.0"
