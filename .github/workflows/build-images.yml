@@ -94,6 +94,30 @@ jobs:
           else
             python3 scripts/check-php-image.py local/autobuild:check "$VALIDATION_PROFILE"
           fi
+      - name: Build native Xray image for runtime validation
+        if: matrix.name == 'xray'
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          platforms: linux/amd64
+          pull: true
+          no-cache: true
+          load: true
+          push: false
+          tags: local/xray:check
+          build-args: ${{ matrix.args }}
+      - name: Validate Xray version, configuration and Geo data
+        if: matrix.name == 'xray'
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint /usr/local/bin/xray local/xray:check version
+          docker run --rm --entrypoint sh local/xray:check -ec \
+            'test -s /usr/local/share/xray/geoip.dat; test -s /usr/local/share/xray/geosite.dat'
+          docker run --rm -i --entrypoint /usr/local/bin/xray local/xray:check run -test -config stdin: <<'JSON'
+          {"inbounds":[{"listen":"127.0.0.1","port":1080,"protocol":"socks"}],"outbounds":[{"tag":"direct","protocol":"freedom"}],"routing":{"rules":[{"type":"field","ip":["geoip:private"],"outboundTag":"direct"},{"type":"field","domain":["geosite:cn"],"outboundTag":"direct"}]}}
+          JSON
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

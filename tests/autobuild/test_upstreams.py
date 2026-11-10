@@ -100,10 +100,12 @@ class SelectionTests(unittest.TestCase):
                 upstream.asset(data, 'binary')
 
     def test_manual_old_release_only_publishes_its_version(self):
-        release = {'tag_name': 'v26.9.1', 'assets': [
-            {'name': 'Xray-linux-' + arch + '.zip', 'digest': DIGEST} for arch in ('64', 'arm64-v8a', 'arm32-v7a')]}
+        release = {'tag_name': 'v26.9.1', 'assets': []}
         with patch.object(upstream, 'release', return_value=release), \
-             patch.object(upstream, 'pin_image', return_value='alpine:latest@' + DIGEST), \
+             patch.object(upstream, 'commit', return_value='a' * 40), \
+             patch.object(upstream, 'request', side_effect=lambda url: (
+                 b'go 1.26.0\n' if url.endswith('go.mod') else ('b' * 64 + '  data.dat\n').encode(), {})), \
+             patch.object(upstream, 'pin_image', side_effect=lambda name: name + '@' + DIGEST), \
              patch.object(upstream, 'read_version', return_value='26.10.21'):
             state, builds, latest = upstream.resolve('xray', '26.9.1')
         self.assertFalse(latest)

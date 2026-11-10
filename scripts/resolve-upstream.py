@@ -258,6 +258,30 @@ def resolve(target, requested=''):
             state['versions']['main'] = sha
             args['ENDLESSH_COMMIT'] = sha
         add(target, './' + target, ['latest'], args)
+    elif target == 'xray':
+        released = release('XTLS/Xray-core', requested)
+        version = released['tag_name'].removeprefix('v')
+        if publish_latest:
+            prevent_downgrade(version, read_version('.xray-version'))
+            record('.xray-version', version)
+        source = commit('XTLS/Xray-core', released['tag_name'])
+        rules = commit('XTLS/Xray-rules-dat', 'release')
+        state['versions'].update(main=version, source=source, rules=rules)
+        # Select the compiler from this release, including historical releases.
+        go_mod = request(f'https://raw.githubusercontent.com/XTLS/Xray-core/{source}/go.mod')[0].decode()
+        go = re.search(r'^go[ \t]+(1\.\d+(?:\.\d+)?)[ \t]*$', go_mod, re.MULTILINE)
+        if not go:
+            raise ValueError('Xray go.mod is missing a valid Go version')
+        args = {'XRAY_COMMIT': source, 'GO_IMAGE': image(f'golang:{go[1]}-alpine'),
+                'ALPINE_IMAGE': image('alpine:latest')}
+        for name, path in (('geoip', 'geoip/geoip-lite.dat'), ('geosite', 'geosite/geosite.dat')):
+            url = f'https://raw.githubusercontent.com/XTLS/Xray-rules-dat/{rules}/{path}'
+            checksum = request(url + '.sha256sum')[0].decode().split()
+            digest = valid_digest('sha256:' + (checksum[0] if checksum else ''))
+            state['assets'][name + '.dat'] = digest.removeprefix('sha256:')
+            args[name.upper() + '_URL'] = url
+            args[name.upper() + '_SHA256'] = state['assets'][name + '.dat']
+        add('xray', './xray', [version] + (['latest'] if publish_latest else []), args, three)
     elif target == 'paperless':
         released = release('paperless-ngx/paperless-ngx')
         version = released['tag_name'].removeprefix('v')
@@ -268,7 +292,7 @@ def resolve(target, requested=''):
             {'PAPERLESS_VERSION': version, 'PAPERLESS_IMAGE': image('ghcr.io/paperless-ngx/paperless-ngx:' + version)})
     else:
         repos = {'coredns': 'coredns/coredns', 'frp': 'fatedier/frp', 'realm': 'zhboner/realm',
-                 'xray': 'XTLS/Xray-core', 'naiveproxy': 'klzgrad/naiveproxy'}
+                 'naiveproxy': 'klzgrad/naiveproxy'}
         released = release(repos[target], requested)
         tag = released['tag_name']
         version = tag if target == 'naiveproxy' else tag.removeprefix('v')
@@ -281,7 +305,6 @@ def resolve(target, requested=''):
             'coredns': {'AMD64': f'coredns_{version}_linux_amd64.tgz', 'ARM64': f'coredns_{version}_linux_arm64.tgz'},
             'frp': {k: f'frp_{version}_linux_{arch}.tar.gz' for k, arch in [('AMD64', 'amd64'), ('ARM64', 'arm64'), ('ARMV7', 'arm')]},
             'realm': {'AMD64': 'realm-x86_64-unknown-linux-musl.tar.gz', 'ARM64': 'realm-aarch64-unknown-linux-musl.tar.gz'},
-            'xray': {k: f'Xray-linux-{arch}.zip' for k, arch in [('AMD64', '64'), ('ARM64', 'arm64-v8a'), ('ARMV7', 'arm32-v7a')]},
             'naiveproxy': {k: f'naiveproxy-{tag}-linux-{arch}.tar.xz' for k, arch in [('AMD64', 'x64'), ('ARM64', 'arm64'), ('ARMV7', 'arm')]},
         }[target]
         checksums = {key: asset(released, name) for key, name in patterns.items()}

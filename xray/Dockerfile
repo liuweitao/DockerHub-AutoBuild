@@ -1,35 +1,42 @@
+ARG GO_IMAGE=golang:1.27-alpine
 ARG ALPINE_IMAGE=alpine:latest
-FROM ${ALPINE_IMAGE}
+# Download inputs and run the compiler on the host CPU, including ARM builds.
+FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS source
 
-LABEL org.opencontainers.image.authors="liuweitao"
+RUN apk add --no-cache curl
+WORKDIR /src
+ARG XRAY_COMMIT
+RUN test -n "$XRAY_COMMIT" && \
+    curl -fL --retry 5 --retry-all-errors --connect-timeout 15 --max-time 300 \
+      "https://codeload.github.com/XTLS/Xray-core/tar.gz/${XRAY_COMMIT}" -o /tmp/source.tar.gz && \
+    tar -xzf /tmp/source.tar.gz --strip-components=1 && rm /tmp/source.tar.gz
 
-ARG VERSION
+ARG GEOIP_URL
+ARG GEOIP_SHA256
+ARG GEOSITE_URL
+ARG GEOSITE_SHA256
+RUN test -n "$GEOIP_SHA256" && test -n "$GEOSITE_SHA256" && \
+    mkdir -p /out/assets && \
+    curl -fL --retry 5 --retry-all-errors --connect-timeout 15 --max-time 300 \
+      "$GEOIP_URL" -o /out/assets/geoip.dat && \
+    echo "$GEOIP_SHA256  /out/assets/geoip.dat" | sha256sum -c - && \
+    curl -fL --retry 5 --retry-all-errors --connect-timeout 15 --max-time 300 \
+      "$GEOSITE_URL" -o /out/assets/geosite.dat && \
+    echo "$GEOSITE_SHA256  /out/assets/geosite.dat" | sha256sum -c -
+
+FROM source AS builder
+ARG TARGETOS
 ARG TARGETARCH
-ARG SHA256_AMD64
-ARG SHA256_ARM64
-ARG SHA256_ARMV7
+ARG TARGETVARIANT
+ENV CGO_ENABLED=0 GOTOOLCHAIN=local
+COPY build-xray.sh /usr/local/bin/build-xray
+RUN sh /usr/local/bin/build-xray
 
+FROM ${ALPINE_IMAGE}
+LABEL org.opencontainers.image.authors="liuweitao"
+RUN apk add --no-cache ca-certificates tzdata && mkdir -p /etc/xray
 WORKDIR /xray
-
-RUN apk add --no-cache curl && \
-    if [ "$TARGETARCH" = "arm64" ]; then \
-        ARCH="arm64-v8a"; \
-    elif [ "$TARGETARCH" = "arm" ]; then \
-        ARCH="arm32-v7a"; \
-    else \
-        ARCH="64"; \
-    fi && \
-    curl -fL --retry 3 --connect-timeout 15 https://github.com/XTLS/Xray-core/releases/download/v${VERSION}/Xray-linux-${ARCH}.zip -o /tmp/upstream-asset && \
-    case "$TARGETARCH" in amd64) EXPECTED="$SHA256_AMD64" ;; arm64) EXPECTED="$SHA256_ARM64" ;; arm) EXPECTED="$SHA256_ARMV7" ;; *) exit 1 ;; esac && \
-    if [ -n "$EXPECTED" ]; then echo "$EXPECTED  /tmp/upstream-asset" | sha256sum -c -; fi && \
-    unzip /tmp/upstream-asset && \
-    rm /tmp/upstream-asset && \
-    mv xray /usr/local/bin/ && \
-    chmod +x /usr/local/bin/xray && \
-    mkdir -p /usr/local/share/xray && \
-    mv geoip.dat geosite.dat /usr/local/share/xray/ && \
-    mkdir /etc/xray && \
-    rm -rf /xray/* && \
-    apk del curl
-
-ENTRYPOINT ["/usr/local/bin/xray", "-config", "/etc/xray/config.json"] 
+COPY --from=builder /out/xray /usr/local/bin/xray
+COPY --from=source /out/assets/ /usr/local/share/xray/
+COPY --from=source /src/LICENSE /usr/share/licenses/xray/LICENSE
+ENTRYPOINT ["/usr/local/bin/xray", "-config", "/etc/xray/config.json"]
