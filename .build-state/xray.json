@@ -1,18 +1,20 @@
 {
   "assets": {
-    "Xray-linux-64.zip": "e4bd9119f50ae7c41658b1abd0679ae06f98bd864a2907ff33f2f2cf7081b214",
-    "Xray-linux-arm32-v7a.zip": "2387f55239ee7799fd67d5382e79f589c1da07a97d993e86b058f2290b8e456b",
-    "Xray-linux-arm64-v8a.zip": "1811c8f1da0c3b6dc707ebaf1c8390e987ba39859a8f0a7aadd8526157f2ec8d"
+    "geoip.dat": "ebd16d2427c32e930ab6bc987cf2114e00d0e546dc941284aaeb4858edf1ef9f",
+    "geosite.dat": "3c4f71ebc8258e097a17c8cbc18fe521d0536a1e3c1ed94d011afdc3e01f9a95"
   },
   "images": {
-    "alpine:latest": "alpine:latest@sha256:3f4d6b32e26703c6082839234f43769d5046b3ac7c910033911d1e71d8cd630a"
+    "alpine:latest": "alpine:latest@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf",
+    "golang:1.27-alpine": "golang:1.27-alpine@sha256:fa3d596898d9f126af7c01d14ee7597bab3f39cccf392ef36b69fe77cd681f18"
   },
   "records": {
-    ".xray-version": "26.10.31"
+    ".xray-version": "26.11.9"
   },
-  "source_digest": "sha256:a3a2dea506b8d37be9a4fd8e28c2b45e03db7a6279fbf3fb1f4f9d01743865db",
+  "source_digest": "sha256:de69da286facc21487332c5fcd5b9c15a99d886eb391537b671bc3989d413594",
   "target": "xray",
   "versions": {
-    "main": "26.10.31"
+    "main": "26.11.9",
+    "rules": "540940c7f8cd90d645dfe801877047f7e23b2202",
+    "source": "676eaf66f8f05d4d558ee7a74b4736623d3feeb9"
   }
 }
