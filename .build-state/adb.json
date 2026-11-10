@@ -4,7 +4,7 @@
     "alpine:latest": "alpine:latest@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf"
   },
   "records": {},
-  "source_digest": "sha256:9d2ad11cb7ffbf3516c3d577dc7970ff3e7fa7a4d4db5f6ebdd006a76b576461",
+  "source_digest": "sha256:6bea97ef547c07c2e2766622d7af3541312ba110d1c012ed5f383c6db0742582",
   "target": "adb",
   "versions": {}
 }
