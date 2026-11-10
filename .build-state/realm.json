@@ -9,7 +9,7 @@
   "records": {
     ".realm-version": "2.9.6"
   },
-  "source_digest": "sha256:10384959ac6519b927b8186ab2544e5efb48034ca18d98ed8f05527db8c2643e",
+  "source_digest": "sha256:49abf06ca4dcd51fbf5037cbe6984e69f273777d46be0b5d58b7c00c4121b932",
   "target": "realm",
   "versions": {
     "main": "2.9.6"
