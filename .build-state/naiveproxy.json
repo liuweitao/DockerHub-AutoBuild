@@ -10,7 +10,7 @@
   "records": {
     ".naiveproxy-version": "v154.0.8037.49-5"
   },
-  "source_digest": "sha256:c24f1b9dd5d2bba9cf37debfa2fb9d26c4ef15349fc512e9b09526a8ce937016",
+  "source_digest": "sha256:7b28a199cddaadf18d13a1766d194530559ee86d9cf9b53d070ceef1f60f9756",
   "target": "naiveproxy",
   "versions": {
     "main": "v154.0.8037.49-5"
