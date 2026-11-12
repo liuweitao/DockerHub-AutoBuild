@@ -1,7 +1,7 @@
 {
   "assets": {
-    "geoip.dat": "085307d83bb381f0d848a7ded5a799fee6b562f64c5d48e41f4b1be02d8bd28a",
-    "geosite.dat": "886ee468031aabdf801fa4989a83b634dcaf2447c4b43f15697cefa4d59a967e"
+    "geoip.dat": "3be83fa71ea2e00b304ec92acefab13ae6bdbf96db5ba3e3c8bf939a8b982c31",
+    "geosite.dat": "a8d979dd602ada84a51e467a862d72831c21e9d3cecde95f188423d94aca9501"
   },
   "images": {
     "alpine:latest": "alpine:latest@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf",
@@ -14,7 +14,7 @@
   "target": "xray",
   "versions": {
     "main": "26.11.9",
-    "rules": "238810a351ae700beaf6064faec0dea8d1f17a22",
+    "rules": "9bf8712e8a84acf5a3e75c4b2100199d698049a4",
     "source": "676eaf66f8f05d4d558ee7a74b4736623d3feeb9"
   }
 }
