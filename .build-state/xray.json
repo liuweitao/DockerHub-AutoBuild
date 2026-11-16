@@ -1,11 +1,11 @@
 {
   "assets": {
-    "geoip.dat": "0e0f12c7edf9ef21181dc7d8467ab65cec9cd38724cedea880d4ea3b55c21d49",
-    "geosite.dat": "85074bd9b8359df382571d98494b9aa1814babc67b52e301e9b08d7e35964fd9"
+    "geoip.dat": "eedefaa714654b4de099e0b8c25aa9a844e7453259f463a066ddd1e702ce51be",
+    "geosite.dat": "59e45b97236f4aa028a88b12c14eb01f14e25baed38ef47eee318eb2492204b9"
   },
   "images": {
     "alpine:latest": "alpine:latest@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf",
-    "golang:1.27-alpine": "golang:1.27-alpine@sha256:eb61c3873c97416fff0116553fff65d67a3549f72e11d9758849a689cdd8b523"
+    "golang:1.27-alpine": "golang:1.27-alpine@sha256:70bd7ddea8b6cbe5d6943cde279d6b67feb10cc924fb9100d1d8757c1575b280"
   },
   "records": {
     ".xray-version": "26.11.9"
@@ -14,7 +14,7 @@
   "target": "xray",
   "versions": {
     "main": "26.11.9",
-    "rules": "8b99a8f8fca3167e5fb8fdfb66fdfd5d457a277e",
+    "rules": "a1db0852e57f9c65c7aa77f519a85053156c7515",
     "source": "676eaf66f8f05d4d558ee7a74b4736623d3feeb9"
   }
 }
