@@ -189,7 +189,9 @@ def resolve(target, requested=''):
     def record(path, value):
         state['records'][path] = value
 
-    def add(name, context, tags, args=None, platforms='linux/amd64', validate=''):
+    amd64 = 'linux/amd64'
+
+    def add(name, context, tags, args=None, platforms=amd64, validate=''):
         builds.append({'name': name, 'context': context, 'file': context + '/Dockerfile',
                        'tags': '\n'.join(tags), 'args': '\n'.join(f'{k}={v}' for k, v in (args or {}).items()),
                        'platforms': platforms, 'validate': validate})
@@ -210,6 +212,8 @@ def resolve(target, requested=''):
         repository, alias, pattern, version_file = spec
         if target == 'caddy':
             version, base = stable_tag(repository, alias, pattern, platforms=three.split(','))
+        elif target == 'nextcloud':
+            version, base = stable_tag(repository, alias, pattern, platforms=(amd64,))
         else:
             version, base = stable_tag(repository, alias, pattern)
         prevent_downgrade(version, read_version(version_file))

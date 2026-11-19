@@ -38,6 +38,27 @@ class SelectionTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'No versioned tag'):
                 upstream.stable_tag('caddy', 'latest', r'\d+\.\d+\.\d+')
 
+    def test_nextcloud_resolves_latest_by_amd64_when_index_digests_differ(self):
+        amd64 = {'os': 'linux', 'architecture': 'amd64', 'digest': 'sha256:' + 'c' * 64}
+        riscv = {'os': 'linux', 'architecture': 'riscv64', 'digest': 'sha256:' + 'd' * 64}
+        alias = {'name': 'latest', 'digest': DIGEST, 'images': [amd64, riscv]}
+        versioned = {'name': '35.0.3', 'digest': OTHER, 'images': [amd64]}
+        previous = {'name': '35.0.2', 'digest': 'sha256:' + 'e' * 64,
+                    'images': [{**amd64, 'digest': 'sha256:' + 'f' * 64}, riscv]}
+        url = 'https://hub.docker.com/v2/repositories/library/nextcloud/tags'
+        metadata = {url + '/latest': alias,
+                    url + '?page_size=100': {'results': [alias, previous, versioned]}}
+        with patch.object(upstream, 'get_json', side_effect=metadata.__getitem__), \
+             patch.object(upstream, 'read_version', return_value='35.0.2'), \
+             patch.object(upstream, 'source_digest', return_value=DIGEST):
+            state, builds, publish_latest = upstream.resolve('nextcloud')
+        base = 'nextcloud:35.0.3@' + OTHER
+        self.assertEqual(state['records'], {'.nextcloud-version': '35.0.3'})
+        self.assertEqual(state['images'], {'nextcloud:35.0.3': base})
+        self.assertEqual(builds[0]['args'], 'NEXTCLOUD_VERSION=35.0.3\nNEXTCLOUD_IMAGE=' + base)
+        self.assertEqual(builds[0]['platforms'], 'linux/amd64')
+        self.assertTrue(publish_latest)
+
     def test_caddy_alias_with_extra_architecture_pins_matching_version_index(self):
         platforms = ('linux/amd64', 'linux/arm64', 'linux/arm/v7')
         images = [{'os': 'linux', 'architecture': arch, 'variant': variant, 'digest': 'sha256:' + char * 64}
