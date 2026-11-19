@@ -1,10 +1,10 @@
 {
   "assets": {},
   "images": {
-    "nginx:stable-alpine3.24": "nginx:stable-alpine3.24@sha256:901e593c95dc85f5a729f5765516321366ef4ac401821431d408897e95287d0a"
+    "nginx:stable-alpine3.24": "nginx:stable-alpine3.24@sha256:3bc3836dc0be3b811f238210360bf8e7ca8a2d0effdae46160bf1f3578710051"
   },
   "records": {
-    ".nginx-digest": "sha256:901e593c95dc85f5a729f5765516321366ef4ac401821431d408897e95287d0a",
+    ".nginx-digest": "sha256:3bc3836dc0be3b811f238210360bf8e7ca8a2d0effdae46160bf1f3578710051",
     ".nginx-version": "stable-alpine3.24"
   },
   "source_digest": "sha256:330d71696a1a02c5a79d81268e891aa1271a01c74e60abbc1cff5ee0e543a613",
