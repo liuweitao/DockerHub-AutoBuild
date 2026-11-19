@@ -1,14 +1,14 @@
 {
   "assets": {},
   "images": {
-    "nextcloud:35.0.2": "nextcloud:35.0.2@sha256:786c102155d2717ba0f53a62b3fdd7a1354edc48e800b94dbe32294d9a5752a2"
+    "nextcloud:35.0.3": "nextcloud:35.0.3@sha256:8a7a65b8bae82a79568fec2ed9cf3e374a1944eda2a22ebe130d79463336fee3"
   },
   "records": {
-    ".nextcloud-version": "35.0.2"
+    ".nextcloud-version": "35.0.3"
   },
-  "source_digest": "sha256:089edd713392382487c79a601336a58973c63ffff70ce5c23f87f791ceedc108",
+  "source_digest": "sha256:7d6ac5dc0f734cf764256409a324139364189f206ba1aa983b37a741f9df00c0",
   "target": "nextcloud",
   "versions": {
-    "main": "35.0.2"
+    "main": "35.0.3"
   }
 }
