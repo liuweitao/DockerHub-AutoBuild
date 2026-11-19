@@ -6,7 +6,7 @@
   "records": {
     ".nextcloud-version": "35.0.3"
   },
-  "source_digest": "sha256:7d6ac5dc0f734cf764256409a324139364189f206ba1aa983b37a741f9df00c0",
+  "source_digest": "sha256:2e4d46e45d8adf425814b71599e7e1790c5699d3afdbe85c0fbec2388122926b",
   "target": "nextcloud",
   "versions": {
     "main": "35.0.3"
