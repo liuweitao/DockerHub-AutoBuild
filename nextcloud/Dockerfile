@@ -18,6 +18,6 @@ RUN set -eux; \
     docker-php-source delete; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*; \
-    printf '%s\n' 'session.upload_progress.enabled=Off' 'expose_php=Off' \
+    printf '%s\n' 'expose_php=Off' \
         > "$PHP_INI_DIR/conf.d/zz-security.ini"; \
     php --ri bz2
