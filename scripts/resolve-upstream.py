@@ -212,7 +212,7 @@ def resolve(target, requested=''):
         repository, alias, pattern, version_file = spec
         if target == 'caddy':
             version, base = stable_tag(repository, alias, pattern, platforms=three.split(','))
-        elif target == 'nextcloud':
+        elif target in ('php8', 'nextcloud'):
             version, base = stable_tag(repository, alias, pattern, platforms=(amd64,))
         else:
             version, base = stable_tag(repository, alias, pattern)

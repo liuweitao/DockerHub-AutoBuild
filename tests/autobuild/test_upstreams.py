@@ -32,6 +32,29 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(image, 'php:' + version + '@' + DIGEST)
         self.assertEqual(get.call_count, 2)
 
+    def test_php8_resolves_alias_by_amd64_when_index_digests_differ(self):
+        amd64 = {'os': 'linux', 'architecture': 'amd64', 'digest': 'sha256:' + 'c' * 64}
+        arm64 = {'os': 'linux', 'architecture': 'arm64', 'digest': 'sha256:' + 'd' * 64}
+        version = '8.6.0-fpm-alpine3.24'
+        alias = {'name': '8-fpm-alpine', 'digest': DIGEST, 'images': [amd64, arm64]}
+        versioned = {'name': version, 'digest': OTHER, 'images': [amd64]}
+        other_alpine = {'name': '8.6.0-fpm-alpine3.25', 'digest': 'sha256:' + 'e' * 64,
+                        'images': [{**amd64, 'digest': 'sha256:' + 'f' * 64}, arm64]}
+        url = 'https://hub.docker.com/v2/repositories/library/php/tags'
+        metadata = {url + '/8-fpm-alpine': alias,
+                    url + '?page_size=100': {'results': [other_alpine, alias, versioned]},
+                    'https://hub.docker.com/v2/repositories/library/composer/tags/2': {'digest': DIGEST}}
+        with patch.object(upstream, 'get_json', side_effect=metadata.__getitem__), \
+             patch.object(upstream, 'read_version', return_value='8.5.12-fpm-alpine3.24'), \
+             patch.object(upstream, 'source_digest', return_value=DIGEST):
+            state, builds, publish_latest = upstream.resolve('php8')
+        base = f'php:{version}@{OTHER}'
+        self.assertEqual(state['records'], {'.php8-version': version})
+        self.assertEqual(state['images'][f'php:{version}'], base)
+        self.assertIn(f'PHP_IMAGE={base}', builds[0]['args'].splitlines())
+        self.assertEqual(builds[0]['platforms'], 'linux/amd64')
+        self.assertTrue(publish_latest)
+
     def test_unpublished_official_alias_fails_instead_of_selecting_an_old_tag(self):
         with patch.object(upstream, 'pin_image', return_value='caddy:latest@' + DIGEST), \
              patch.object(upstream, 'get_json', return_value={'results': [{'name': '2.11.6', 'digest': OTHER}]}):
