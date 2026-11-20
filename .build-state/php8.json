@@ -1,15 +1,15 @@
 {
   "assets": {},
   "images": {
-    "composer:2": "composer:2@sha256:0c8e663f14c94d07b3c45b175c51f5a14718508f21fe4dd7e54f09488dd0ed71",
-    "php:8.5.12-fpm-alpine3.24": "php:8.5.12-fpm-alpine3.24@sha256:951fb5b1780219b81d5daffa4cebef8e0077c537f3893d9790a5dfcd66ca334d"
+    "composer:2": "composer:2@sha256:919efe8e62179c71dfd31fad035fd671fe7454211c6b2aa30a10af0ab4acedba",
+    "php:8.6.0-fpm-alpine3.24": "php:8.6.0-fpm-alpine3.24@sha256:3892978a38794b348f73d6926fb63e352b5338f8b302cdd2cf0ed968f63b50c5"
   },
   "records": {
-    ".php8-version": "8.5.12-fpm-alpine3.24"
+    ".php8-version": "8.6.0-fpm-alpine3.24"
   },
-  "source_digest": "sha256:eb74d56c8de02ad7425387dc408e8bb674e1b46925b3fd382fa4942b5e262e15",
+  "source_digest": "sha256:db8bd7e25077ad7a12192aba8e6dbd4135e38d4fc8f2f1d5887ebb46fc3a827e",
   "target": "php8",
   "versions": {
-    "main": "8.5.12-fpm-alpine3.24"
+    "main": "8.6.0-fpm-alpine3.24"
   }
 }
