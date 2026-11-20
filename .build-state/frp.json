@@ -10,7 +10,7 @@
   "records": {
     ".frp-version": "0.72.0"
   },
-  "source_digest": "sha256:31b25d2f9bd5513d3eca74a250fd1c5a64c842ae7df8c7c625b6e8b89d797870",
+  "source_digest": "sha256:272780eeefbdcb121ca0ad8761c8ab41831e424bbc51b198c86fc5d029d63213",
   "target": "frp",
   "versions": {
     "main": "0.72.0"
