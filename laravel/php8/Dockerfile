@@ -12,19 +12,31 @@ ENV UID=${UID} GID=${GID}
 # Keep known security floors; allow later stable PHP 8 branches, excluding previews.
 RUN php -r '$minimum = ["8.2" => "8.2.35", "8.3" => "8.3.36", "8.4" => "8.4.27", "8.5" => "8.5.12"]; $version = PHP_VERSION; $branch = implode(".", array_slice(explode(".", $version), 0, 2)); if (!preg_match("/^8\\.[0-9]+\\.[0-9]+$/D", $version) || version_compare($version, $minimum[$branch] ?? "8.6.0", "<")) { fwrite(STDERR, "Unsupported or unpatched PHP base: " . $version . PHP_EOL); exit(1); }'
 
-# PHP 8.6 no longer ships the PECL installer.
+# Build from verified sources since PHP 8.6 no longer ships PECL.
+# PHP 8.6 uses the phpredis upstream CI revision with support for its C API.
 RUN set -eux; \
     apk upgrade --no-cache; \
     apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS imap-dev openssl-dev krb5-dev; \
     curl -fL --retry 3 --connect-timeout 15 -o /tmp/imap.tgz https://pecl.php.net/get/imap-1.0.3.tgz; \
     echo '0c2c0b1f94f299004be996b85a424e3d11ff65ac0a3c980db3213289a4a3faaf  /tmp/imap.tgz' | sha256sum -c -; \
-    curl -fL --retry 3 --connect-timeout 15 -o /tmp/redis.tgz https://pecl.php.net/get/redis-6.3.0.tgz; \
-    echo '0d5141f634bd1db6c1ddcda053d25ecf2c4fc1c395430d534fd3f8d51dd7f0b5  /tmp/redis.tgz' | sha256sum -c -; \
+    if php -r 'exit(PHP_VERSION_ID >= 80600 ? 0 : 1);'; then \
+        redis_source='https://codeload.github.com/phpredis/phpredis/tar.gz/a6ce1e60b3e81ce3b25174aa5aaefd5590dc64fd'; \
+        redis_sha256='79288312706263ad0744391752fd9a62273d5a73c4e6e6a42ff2819e76363533'; \
+    else \
+        redis_source='https://pecl.php.net/get/redis-6.3.0.tgz'; \
+        redis_sha256='0d5141f634bd1db6c1ddcda053d25ecf2c4fc1c395430d534fd3f8d51dd7f0b5'; \
+    fi; \
+    curl -fL --retry 3 --connect-timeout 15 -o /tmp/redis.tgz "$redis_source"; \
+    echo "$redis_sha256  /tmp/redis.tgz" | sha256sum -c -; \
     docker-php-source extract; \
     mkdir -p /usr/src/php/ext/imap /usr/src/php/ext/redis; \
-    tar -xzf /tmp/imap.tgz -C /usr/src/php/ext/imap --strip-components=1 imap-1.0.3; \
-    tar -xzf /tmp/redis.tgz -C /usr/src/php/ext/redis --strip-components=1 redis-6.3.0; \
+    tar --no-same-owner -xzf /tmp/imap.tgz -C /usr/src/php/ext/imap --strip-components=1 imap-1.0.3; \
+    tar --no-same-owner -xzf /tmp/redis.tgz -C /usr/src/php/ext/redis --strip-components=1; \
+    sed -i \
+        -e 's/XtOffsetOf(/offsetof(/g' \
+        -e 's/INI_STR("sendmail_path")/zend_ini_string("sendmail_path", sizeof("sendmail_path") - 1, 0)/g' \
+        /usr/src/php/ext/imap/php_imap.c; \
     docker-php-ext-configure imap --with-kerberos --with-imap-ssl; \
     docker-php-ext-install -j"$(nproc)" pdo_mysql imap redis; \
     run_deps="$(scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
