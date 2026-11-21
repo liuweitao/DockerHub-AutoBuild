@@ -1,7 +1,7 @@
 {
   "assets": {},
   "images": {
-    "composer:2": "composer:2@sha256:919efe8e62179c71dfd31fad035fd671fe7454211c6b2aa30a10af0ab4acedba",
+    "composer:2": "composer:2@sha256:50ea4d33fdcde1adb0f045547295faa1548b33872e5f789dae5b02ce2fb5de93",
     "php:8.6.0-fpm-alpine3.24": "php:8.6.0-fpm-alpine3.24@sha256:3892978a38794b348f73d6926fb63e352b5338f8b302cdd2cf0ed968f63b50c5"
   },
   "records": {
