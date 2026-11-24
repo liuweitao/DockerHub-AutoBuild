@@ -1,7 +1,7 @@
 {
   "assets": {},
   "images": {
-    "nextcloud:35.0.3": "nextcloud:35.0.3@sha256:f22d1dd63844bd15bbf6c2019149653c3d1c775ba48b173b56c3c6ad5f386196"
+    "nextcloud:35.0.3": "nextcloud:35.0.3@sha256:520a6765f6f26957e55a13a1d6a0c60e8f763425cdb9507c7351473efa432613"
   },
   "records": {
     ".nextcloud-version": "35.0.3"
